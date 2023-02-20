@@ -11,13 +11,14 @@ type IEntity interface {
 	GetId() uuid.UUID
 	GetOwnerID() uuid.UUID
 	GetPossessedID() uuid.UUID
-	AddComponent(cmp IComponent) error
+	AddComponent(cmp Component) error
 	HaveComponent(cn string) bool
-	GetComponent(id string) *IComponent
-	GetComponents() []*IComponent
+	GetComponent(id string) *Component
+	GetComponents() []*Component
 	GetComposition() []string
-	UpdateComponents([]*IComponent)
+	UpdateComponents([]*Component)
 	HaveComposition([]string) bool
+	GetStructure() *Entity
 }
 
 type Entity struct {
@@ -25,15 +26,15 @@ type Entity struct {
 	OwnerID     uuid.UUID `json:"ownerId"` // ClientID
 	PossessedID uuid.UUID `json:"possessedId"`
 	World       *IWorld
-	Components  []*IComponent `json:"components"`
+	Components  []*Component `json:"components"`
 }
 
 // Remove Cyclique Structure from type Entity caused by *World qui contient lui même l'entité
 type EntityNoCycle struct {
-	Id          uuid.UUID     `json:"id"`
-	OwnerID     uuid.UUID     `json:"ownerId"`
-	PossessedID uuid.UUID     `json:"possessedId"`
-	Components  []*IComponent `json:"components"`
+	Id          uuid.UUID    `json:"id"`
+	OwnerID     uuid.UUID    `json:"ownerId"`
+	PossessedID uuid.UUID    `json:"possessedId"`
+	Components  []*Component `json:"components"`
 }
 
 func (entity *Entity) GetId() uuid.UUID {
@@ -48,7 +49,7 @@ func (entity *Entity) GetPossessedID() uuid.UUID {
 	return entity.PossessedID
 }
 
-func (entity *Entity) AddComponent(cmp IComponent) error {
+func (entity *Entity) AddComponent(cmp Component) error {
 	// Check if we already have a component with same id
 	var foundId int = -1
 
@@ -67,15 +68,14 @@ func (entity *Entity) AddComponent(cmp IComponent) error {
 }
 
 // Si un composant spécifié dans l'argument n'existe pas alors on en crée un sur l'entité cible
-func (entity *Entity) UpdateComponents(components []*IComponent) {
+func (entity *Entity) UpdateComponents(components []*Component) {
 	for _, c := range components {
-		componentLocalised := *c
-		targetComponent := entity.GetComponent(componentLocalised.GetId())
-		targetComponentLocalised := *targetComponent
+		targetComponent := entity.GetComponent(c.GetId())
 
-		if targetComponentLocalised != nil {
+		if targetComponent != nil {
+			targetComponent.Data = c.Data
 		} else {
-			entity.AddComponent(targetComponentLocalised)
+			entity.AddComponent(*c)
 		}
 	}
 }
@@ -90,7 +90,7 @@ func (entity *Entity) HaveComponent(cn string) bool {
 	return false
 }
 
-func (entity *Entity) GetComponent(id string) (cmp *IComponent) {
+func (entity *Entity) GetComponent(id string) (cmp *Component) {
 	for _, component := range entity.GetComponents() {
 		componentLocalised := *component
 		if componentLocalised.GetId() == id {
@@ -100,7 +100,7 @@ func (entity *Entity) GetComponent(id string) (cmp *IComponent) {
 	return cmp
 }
 
-func (entity *Entity) GetComponents() (components []*IComponent) {
+func (entity *Entity) GetComponents() (components []*Component) {
 	return entity.Components
 }
 
@@ -129,7 +129,11 @@ func (entity *Entity) GetWorld() *IWorld {
 	return entity.World
 }
 
-func CEntity(world *IWorld, id uuid.UUID, components []*IComponent) *IEntity {
+func (entity *Entity) GetStructure() *Entity {
+	return entity
+}
+
+func CEntity(world *IWorld, id uuid.UUID, components []*Component) *IEntity {
 	var newEntity IEntity = &Entity{
 		Id:         id,
 		World:      world,
@@ -138,7 +142,7 @@ func CEntity(world *IWorld, id uuid.UUID, components []*IComponent) *IEntity {
 	return &newEntity
 }
 
-func CEntityWithOwner(world *IWorld, id uuid.UUID, ownerId uuid.UUID, components []*IComponent) *IEntity {
+func CEntityWithOwner(world *IWorld, id uuid.UUID, ownerId uuid.UUID, components []*Component) *IEntity {
 	var newEntity IEntity = &Entity{
 		Id:         id,
 		World:      world,
@@ -148,7 +152,7 @@ func CEntityWithOwner(world *IWorld, id uuid.UUID, ownerId uuid.UUID, components
 	return &newEntity
 }
 
-func CEntityPossessed(world *IWorld, id uuid.UUID, possessedByID uuid.UUID, components []*IComponent) *IEntity {
+func CEntityPossessed(world *IWorld, id uuid.UUID, possessedByID uuid.UUID, components []*Component) *IEntity {
 	var newEntity IEntity = &Entity{
 		Id:          id,
 		World:       world,

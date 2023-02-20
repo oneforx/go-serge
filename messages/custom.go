@@ -6,6 +6,6 @@ import (
 )
 
 type UpdateMessageData struct {
-	Id         uuid.UUID         `json:"id"`
-	Components []*ecs.IComponent `json:"components"`
+	Id         uuid.UUID        `json:"id"`
+	Components []*ecs.Component `json:"components"`
 }

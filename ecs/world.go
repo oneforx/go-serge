@@ -14,7 +14,7 @@ type IWorld interface {
 	GetEntity(uuid.UUID) *IEntity
 	GetEntities() []*IEntity
 	GetEntitiesNoCycle() []EntityNoCycle
-
+	AddEntitiesFromEntitiesNoCycle(entitiesNoCycle []EntityNoCycle)
 	// UUID should be an external ID maybe a ClientID
 	GetEntitiesPossessedBy(uuid.UUID) []*IEntity
 	GetEntitiesByComponentId(string) []*IEntity
@@ -30,12 +30,12 @@ type IWorld interface {
 	// FR: Obtiens les entités qui ont au moins la composition spécifié
 	//     Retourne une tranche de pointeurs IEntity.
 	GetEntitiesWithComposition(Composition) []*IEntity
-	UpdateEntityComponents(uuid.UUID, []*IComponent) *FeedBack
+	UpdateEntityComponents(uuid.UUID, []*Component) *FeedBack
 	RemoveEntity(uuid.UUID) *FeedBack
 	AddSystem(*ISystem)
 	GetSystemById(uuid.UUID) *ISystem
 	RemoveSystem(uuid.UUID) *FeedBack
-	Update(*sync.Mutex)
+	Update()
 }
 
 type World struct {
@@ -74,8 +74,6 @@ func (world *World) AddEntity(entity *IEntity) (err *FeedBack) {
 }
 
 func (world *World) AddEntities(entities []Entity) (fb *FeedBack) {
-	world.entitiesMutex.Lock()
-	defer world.entitiesMutex.Unlock()
 	for _, entity := range entities {
 		if world.GetEntity(entity.Id) != nil {
 			if fb == nil {
@@ -102,9 +100,23 @@ func (world *World) AddEntities(entities []Entity) (fb *FeedBack) {
 	return fb
 }
 
+func (world *World) AddEntitiesFromEntitiesNoCycle(entitiesNoCycle []EntityNoCycle) {
+	var w IWorld = world
+	for _, entityNoCycle := range entitiesNoCycle {
+		var entity IEntity = &Entity{
+			Id:          entityNoCycle.Id,
+			OwnerID:     entityNoCycle.OwnerID,
+			PossessedID: entityNoCycle.OwnerID,
+			World:       &w,
+			Components:  entityNoCycle.Components,
+		}
+		world.AddEntity(&entity)
+	}
+}
+
 func (world *World) GetEntity(id uuid.UUID) (ent *IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
 		entityLocalised := *entity
 		if entityLocalised.GetId() == id {
@@ -115,14 +127,12 @@ func (world *World) GetEntity(id uuid.UUID) (ent *IEntity) {
 }
 
 func (world *World) GetEntities() (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	return world.Entities
 }
 
 func (world *World) GetEntitiesNoCycle() (entities []EntityNoCycle) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
 	for _, entity := range world.GetEntities() {
 		entityLocalised := *entity
 
@@ -138,8 +148,8 @@ func (world *World) GetEntitiesNoCycle() (entities []EntityNoCycle) {
 }
 
 func (world *World) GetEntitiesPossessedBy(possessedId uuid.UUID) (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
 		entityLocalised := *entity
 		if entityLocalised.GetPossessedID() == possessedId {
@@ -150,8 +160,8 @@ func (world *World) GetEntitiesPossessedBy(possessedId uuid.UUID) (entities []*I
 }
 
 func (world *World) GetEntitiesByComponentId(id string) (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
 		entityLocalised := *entity
 		for _, component := range entityLocalised.GetComponents() {
@@ -165,8 +175,8 @@ func (world *World) GetEntitiesByComponentId(id string) (entities []*IEntity) {
 }
 
 func (world *World) GetEntitiesWithComponents(v ...string) (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
 		entityLocalised := *entity
 		var checkeds int = 0
@@ -183,8 +193,8 @@ func (world *World) GetEntitiesWithComponents(v ...string) (entities []*IEntity)
 }
 
 func (world *World) GetEntitiesWithComposition(composition Composition) (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.GetEntities() {
 		entityLocalised := *entity
 		if entityLocalised.HaveComposition(composition) {
@@ -195,8 +205,8 @@ func (world *World) GetEntitiesWithComposition(composition Composition) (entitie
 }
 
 func (world *World) GetEntitiesWithStrictComposition(composition Composition) (entities []*IEntity) {
-	world.entitiesMutex.RLock()
-	defer world.entitiesMutex.RUnlock()
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.GetEntities() {
 		entityLocalised := *entity
 		if len(composition) == len(entityLocalised.GetComponents()) && entityLocalised.HaveComposition(composition) {
@@ -206,9 +216,7 @@ func (world *World) GetEntitiesWithStrictComposition(composition Composition) (e
 	return entities
 }
 
-func (world *World) UpdateEntityComponents(id uuid.UUID, components []*IComponent) *FeedBack {
-	world.entitiesMutex.Lock()
-	defer world.entitiesMutex.Unlock()
+func (world *World) UpdateEntityComponents(id uuid.UUID, components []*Component) *FeedBack {
 	entity := world.GetEntity(id)
 	if entity != nil {
 		entityLocalised := *entity
@@ -292,9 +300,9 @@ func (world *World) RemoveSystem(id uuid.UUID) (err *FeedBack) {
 	return nil
 }
 
-func (world *World) Update(sync_mutex *sync.Mutex) {
+func (world *World) Update() {
 	for _, system := range world.GetSystems() {
 		systemLocalised := *system
-		systemLocalised.Update(sync_mutex)
+		systemLocalised.Update()
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 
 	"github.com/bawdeveloppement/squirrelgameserver/ecs"
 	"github.com/bawdeveloppement/squirrelgameserver/engine"
@@ -133,27 +132,29 @@ func (g *SquirrelGame) Save() error {
 
 // Draw dessine le jeu Ebiten
 func (g *SquirrelGame) Draw(screen *ebiten.Image) {
-	var sync_mutex sync.Mutex
 
-	sync_mutex.Lock()
 	if len(g.World.GetEntities()) > 0 {
 		for _, entity := range g.World.GetEntities() {
 			entityLocalisation := *entity
 			positionComponent := entityLocalisation.GetComponent("position")
 			if positionComponent == nil {
+				log.Println("dazddzdzzdddda")
 				continue
 			}
 			positionComponentLocalised := *positionComponent
 			positionComponentData, ok := positionComponentLocalised.GetData().(map[string]interface{})
 			if !ok {
+				log.Println("daxdsxxzda")
 				continue
 			}
 			x, ok := positionComponentData["x"].(float64)
 			if !ok {
+				log.Println("daxdsxxzda")
 				continue
 			}
 			y, ok := positionComponentData["y"].(float64)
 			if !ok {
+				log.Println("daxdsxxzda")
 				continue
 			}
 			img, ok := g.Resources["squirrel"]
@@ -174,7 +175,6 @@ func (g *SquirrelGame) Draw(screen *ebiten.Image) {
 			screen.DrawImage(img, imageOption)
 		}
 	}
-	sync_mutex.Unlock()
 }
 
 // Layout retourne la taille de l'écran Ebiten

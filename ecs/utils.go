@@ -19,3 +19,15 @@ func EntityNoCycleToEntity(world *IWorld, entityNoCycle EntityNoCycle) *IEntity 
 	}
 	return &entity
 }
+
+func EntityNoCycleArrayToEntityArray(world IWorld, entitiesNoCycle []EntityNoCycle) (entities []Entity) {
+	for _, entityNoCycle := range entitiesNoCycle {
+		entities = append(entities, Entity{
+			Id:          entityNoCycle.Id,
+			OwnerID:     entityNoCycle.OwnerID,
+			PossessedID: entityNoCycle.OwnerID,
+			World:       &world,
+		})
+	}
+	return entities
+}

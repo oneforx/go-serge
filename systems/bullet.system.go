@@ -2,7 +2,6 @@ package systems
 
 import (
 	"log"
-	"sync"
 
 	"github.com/bawdeveloppement/squirrelgameserver/ecs"
 	"github.com/bawdeveloppement/squirrelgameserver/library"
@@ -23,9 +22,8 @@ func (ss *BulletSystem) GetId() uuid.UUID {
 	return ss.Id
 }
 
-func (ss *BulletSystem) Update(sync_mutex *sync.Mutex) {
+func (ss *BulletSystem) Update() {
 
-	sync_mutex.Lock()
 	worldLocalised := *ss.World
 	bulletEntities := worldLocalised.GetEntitiesWithStrictComposition(library.BULLET_COMPOSITION)
 	for _, bullet := range bulletEntities {
@@ -56,5 +54,4 @@ func (ss *BulletSystem) Update(sync_mutex *sync.Mutex) {
 		// 	log.Println(playerLocalised)
 		// }
 	}
-	sync_mutex.Unlock()
 }

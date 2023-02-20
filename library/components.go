@@ -3,6 +3,7 @@ package library
 import "github.com/bawdeveloppement/squirrelgameserver/ecs"
 
 var (
+	// int, int32, int, float float32 float64, string, []int []float []string
 	// EN: Component with { x, y, origin_x, origin_y }. OriginXY is used for recognising where the entity was created
 	COMPONENT_POSITION = func(x float64, y float64) *ecs.Component {
 		return ecs.CreateComponent("position", map[string]interface{}{"x": x, "y": y, "origin_x": x, "origin_y": y})

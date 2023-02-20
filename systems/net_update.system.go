@@ -25,27 +25,45 @@ func (ss *NetUpdateSystem) GetId() uuid.UUID {
 	return ss.Id
 }
 
-func (ss *NetUpdateSystem) Update(mutex *sync.Mutex) {
+func (ss *NetUpdateSystem) Update() {
 
-	if ss.ServerEngine.UdpInit {
+	var sync_mutex sync.Mutex
+	sync_mutex.Lock()
+	init := ss.ServerEngine.UdpInit
+	sync_mutex.Unlock()
+	if init {
 		worldLocalised := *ss.World
 
 		for _, entity := range worldLocalised.GetEntities() {
 			entityLocalised := *entity
 
-			bytes, err := engine.MessageToBytes(messages.SC_UPDATE_ENTITY(entityLocalised.GetId(), entityLocalised.GetComponents()))
+			var components []*ecs.Component = []*ecs.Component{}
+
+			for _, cmp := range entityLocalised.GetComponents() {
+				cmpLocalised := *cmp
+				components = append(components, cmpLocalised.GetStructure())
+			}
+
+			bytes, err := engine.MessageToBytes(
+				messages.SC_UPDATE_ENTITY(entityLocalised.GetId(), components),
+			)
 			if err != nil {
 				log.Println("Could not parse SC_UPDATE_ENTITY to bytes")
 				continue
 			}
 
-			for _, u := range ss.ServerEngine.UdpConnexions {
-				log.Println("dzadaz")
+			sync_mutex.Lock()
+			udpConnexions := ss.ServerEngine.UdpConnexions
+			sync_mutex.Unlock()
+			for _, u := range udpConnexions {
+				sync_mutex.Lock()
 				_, err = ss.ServerEngine.UdpListener.WriteToUDP(bytes, u)
 				if err != nil {
+					defer sync_mutex.Unlock()
 					log.Println("Could not SC_UPDATE_ENTITY")
 					continue
 				}
+				sync_mutex.Unlock()
 			}
 		}
 	}

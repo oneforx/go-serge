@@ -20,15 +20,16 @@ type ServerEngine struct {
 	UdpInit       bool
 	UdpConnexions map[string]*net.UDPAddr
 	UdpMessages   map[string]chan []byte
+
+	serverMutex sync.Mutex
 }
 
 type Client struct {
 	Id uuid.UUID
 }
 
-func (se *ServerEngine) Start(address string, wait_mutex *sync.Mutex, tcpConnexionHandler func(connexion *net.TCPConn), udpConnexionHandler func(masterConnexion *net.UDPConn, addr *net.UDPAddr)) {
-	var wait_group sync.WaitGroup
-	defer wait_group.Done()
+func (se *ServerEngine) Start(address string) {
+	var wait_mutex sync.Mutex
 	// Listen for TCP connections
 	tcpAddr, err := net.ResolveTCPAddr("tcp", address)
 	if err != nil {
@@ -39,7 +40,6 @@ func (se *ServerEngine) Start(address string, wait_mutex *sync.Mutex, tcpConnexi
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer tcpListener.Close()
 
 	wait_mutex.Lock()
 	se.TcpListener = tcpListener
@@ -56,73 +56,116 @@ func (se *ServerEngine) Start(address string, wait_mutex *sync.Mutex, tcpConnexi
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer udpListener.Close()
 
 	wait_mutex.Lock()
 	se.UdpListener = udpListener
 	se.UdpInit = true
 	se.UdpConnexions = make(map[string]*net.UDPAddr)
-	se.UdpMessages = make(map[string]chan []byte)
+	se.UdpMessages = make(map[string]chan []byte, 1000)
 	wait_mutex.Unlock()
+}
 
-	wait_group.Add(1)
-	go func() {
-		defer wait_group.Done()
+func (se *ServerEngine) Close() {
+	se.TcpListener.Close()
+	se.UdpListener.Close()
+}
 
-		for {
-			tcpConnexion, err := se.TcpListener.AcceptTCP()
-			if err != nil {
-				continue
-			}
-
-			if se.TcpConnexions[tcpConnexion.RemoteAddr().String()] == nil {
-				se.TcpConnexions[tcpConnexion.RemoteAddr().String()] = tcpConnexion
-			}
-
-			// Vérifiez si la connexion est fermée avant de l'utiliser
-			if tcpConnexion == nil || tcpConnexion.RemoteAddr() == nil {
-				continue
-			}
-
-			log.Printf("Got a client %v", tcpConnexion.RemoteAddr().String())
-
-			go tcpConnexionHandler(tcpConnexion)
+func (se *ServerEngine) ListenTCP(connexionHandler func(connexion *net.TCPConn)) {
+	for {
+		if !se.TcpInit {
+			continue
 		}
-	}()
-
-	wait_group.Add(1)
-	go func() {
-		defer wait_group.Done()
-		defer log.Println("Close udp listener")
-
-		// Listen for UDP connections
-		for {
-			buf := make([]byte, 1024)
-			n, addr, err := udpListener.ReadFromUDP(buf)
-			if err != nil {
-				fmt.Println("Error reading message:", err)
-				continue
-			}
-
-			_, ok := se.UdpConnexions[addr.String()]
-			if !ok {
-				se.UdpMessages[addr.String()] = make(chan []byte, 1000)
-				go udpConnexionHandler(udpListener, addr)
-			}
-
-			if se.UdpConnexions[addr.String()] == nil {
-				se.UdpConnexions[addr.String()] = addr
-			}
-
-			// Ici envois le message dans le channel
-			// C'est mieux qu'un select
-			go func() {
-				se.UdpMessages[addr.String()] <- buf[:n]
-			}()
+		tcpConnexion, err := se.TcpListener.AcceptTCP()
+		if err != nil {
+			continue
 		}
-	}()
 
-	wait_group.Wait()
+		se.serverMutex.Lock()
+		if se.TcpConnexions[tcpConnexion.RemoteAddr().String()] == nil {
+			se.TcpConnexions[tcpConnexion.RemoteAddr().String()] = tcpConnexion
+		}
+		se.serverMutex.Unlock()
+
+		se.serverMutex.Lock()
+		// Vérifiez si la connexion est fermée avant de l'utiliser
+		if tcpConnexion == nil || tcpConnexion.RemoteAddr() == nil {
+			continue
+		}
+		se.serverMutex.Unlock()
+
+		log.Printf("Got a client %v", tcpConnexion.RemoteAddr().String())
+
+		go connexionHandler(tcpConnexion)
+	}
+}
+
+func (se *ServerEngine) ListenMessages(messageHandler func(message Message, addr *net.UDPAddr)) {
+	for {
+		if !se.UdpInit {
+			continue
+		}
+		buf := make([]byte, 1024)
+		n, addr, err := se.UdpListener.ReadFromUDP(buf)
+		if err != nil {
+			fmt.Println("Error reading message:", err)
+			continue
+		}
+
+		se.serverMutex.Lock()
+		_, ok := se.UdpConnexions[addr.String()]
+		se.serverMutex.Unlock()
+		if !ok {
+			se.serverMutex.Lock()
+			se.UdpConnexions[addr.String()] = addr
+			se.serverMutex.Unlock()
+		}
+
+		message, err := BytesToMessage(buf[:n])
+		if err != nil {
+			continue
+		}
+
+		go messageHandler(message, addr)
+	}
+}
+
+func (se *ServerEngine) ListenUDP(connexionHandler func(*net.UDPConn, *net.UDPAddr, chan []byte)) {
+	for {
+		if !se.UdpInit {
+			continue
+		}
+		buf := make([]byte, 1024)
+		n, addr, err := se.UdpListener.ReadFromUDP(buf)
+		if err != nil {
+			fmt.Println("Error reading message:", err)
+			continue
+		}
+
+		se.serverMutex.Lock()
+		_, ok := se.UdpConnexions[addr.String()]
+		se.serverMutex.Unlock()
+		if !ok {
+			se.serverMutex.Lock()
+			se.UdpMessages[addr.String()] = make(chan []byte, 1000)
+			se.serverMutex.Unlock()
+			go connexionHandler(se.UdpListener, addr, se.UdpMessages[addr.String()])
+		}
+
+		se.serverMutex.Lock()
+		if se.UdpConnexions[addr.String()] == nil {
+			se.UdpConnexions[addr.String()] = addr
+		}
+		se.serverMutex.Unlock()
+
+		// Ici envois le message dans le channel
+		// C'est mieux qu'un select
+		go func() {
+			se.serverMutex.Lock()
+			se.UdpMessages[addr.String()] <- buf[:n]
+			se.serverMutex.Unlock()
+		}()
+
+	}
 }
 
 func (se *ServerEngine) USendToAll(message Message) *ecs.FeedBack {

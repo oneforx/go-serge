@@ -39,7 +39,7 @@ var (
 			NetMode:     engine.NET_TCP,
 		}
 	}
-	SC_UPDATE_ENTITY = func(entityId uuid.UUID, entityData []*ecs.IComponent) engine.Message {
+	SC_UPDATE_ENTITY = func(entityId uuid.UUID, entityData []*ecs.Component) engine.Message {
 		return engine.Message{
 			MessageType: "UPDATE_ENTITY",
 			Data: UpdateMessageData{

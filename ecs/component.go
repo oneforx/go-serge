@@ -12,9 +12,8 @@ type Component struct {
 	Data interface{} `json:"data"`
 }
 
-func CreateComponent(id string, data interface{}) *IComponent {
-	var component IComponent = &Component{Id: id, Data: data}
-	return &component
+func CreateComponent(id string, data interface{}) *Component {
+	return &Component{Id: id, Data: data}
 }
 
 func (p *Component) GetId() string {

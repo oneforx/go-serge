@@ -131,8 +131,8 @@ func main() {
 			switch message.MessageType {
 			case "CREATE_WORLD":
 				type CustomMessage struct {
-					MessageType string       `json:"message"`
-					Data        []ecs.Entity `json:"data"`
+					MessageType string              `json:"message"`
+					Data        []ecs.EntityNoCycle `json:"data"`
 				}
 
 				var createWorldMessage CustomMessage
@@ -142,9 +142,7 @@ func main() {
 					continue
 				}
 
-				mutex.Lock()
-				squirrelGame.World.AddEntities(createWorldMessage.Data)
-				mutex.Unlock()
+				squirrelGame.World.AddEntitiesFromEntitiesNoCycle(createWorldMessage.Data)
 			case "CONNECT_SUCCESS":
 				token, ok := message.Data.(string)
 				if !ok {
@@ -250,11 +248,15 @@ func main() {
 					log.Println("Could not parse custom message", err)
 					continue
 				}
+
 				entity := squirrelGame.World.GetEntity(customMessage.Data.Id)
 
 				if entity != nil {
+					log.Println(*customMessage.Data.Components[0])
 					entityLocalised := *entity
 					entityLocalised.UpdateComponents(customMessage.Data.Components)
+					// squirrelGame.World.UpdateEntityComponents(entityLocalised.GetId(), customMessage.Data.Components)
+					// log.Println(entityLocalised.GetComponent("position"))
 				}
 				// sync_mutex.Lock()
 				// squirrelGame.Entities = customMessage.Data
