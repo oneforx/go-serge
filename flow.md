@@ -6,15 +6,7 @@ Meilleur gestion de l'écriture du message sur le client Split(scanner) -> OK
 Gérer la connexion de plusieurs client différent -> OK
 
 Envoyer un message -> CREATE_WORLD
-
-V2
-Optimiser les messages
-Faire plutôt une goroutine qui écouteras le canal stateUpdateMessage et qui envoieras aux clients udp
-Chaque message contient un update pour une entité précise
-A chaque modification d'une entité -> Envoyer un message update qui seras traiter par la goroutine
-Un UpdateEntityMessage contient
-{ idEntity, dataEntity: map[string]Component } map[string]Component uniquement les composant mise à jour
-
+OPTIMISER les message -> UPDATE
 
 Envoyer des glands
     -> Client send CS_SHOOT

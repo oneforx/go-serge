@@ -30,6 +30,10 @@ var squirrelGame *game.SquirrelGame = &game.SquirrelGame{
 	},
 	Resources: map[string]*ebiten.Image{},
 	Entities:  []ecs.Entity{},
+	Camera: &game.Camera{
+		X: 0,
+		Y: 0,
+	},
 }
 
 func init() {
@@ -112,21 +116,21 @@ func main() {
 			}
 			tcpConnexion.Write(bytes)
 		}
+
 		for {
-			buf := make([]byte, 20480)
+			buf := make([]byte, 20480000)
 			n, err := tcpConnexion.Read(buf)
 			if err != nil {
 				continue
 			}
-
 			var message engine.Message
 
 			if err := json.Unmarshal(buf[:n], &message); err != nil {
-				log.Println("Could not read message", string(buf[:n]))
+				log.Println("Could not read message", err.Error())
 				continue
 			}
 
-			log.Println("[TCP]: Received: " + string(buf[:n]))
+			log.Println("[TCP]: Received: ")
 
 			switch message.MessageType {
 			case "CREATE_WORLD":
@@ -138,7 +142,6 @@ func main() {
 				var createWorldMessage CustomMessage
 
 				if err := json.Unmarshal(buf[:n], &createWorldMessage); err != nil {
-					log.Println(err)
 					continue
 				}
 
@@ -221,47 +224,53 @@ func main() {
 			}
 			remoteUdpConnexion.Write(bytes)
 		}
-		for {
-			// var sync_mutex sync.Mutex
-			buf := make([]byte, 20480)
-			n, _, err := remoteUdpConnexion.ReadFromUDP(buf)
-			if err != nil {
-				log.Println("Could not read message from remote udp connexion")
-				continue
-			}
 
-			message, err := engine.BytesToMessage(buf[:n])
-			if err != nil {
-				continue
-			}
+		for i := 0; i < 10; i++ {
+			go func() {
+				for {
+					buf := make([]byte, 20480)
+					mutex.Lock()
+					n, _, err := remoteUdpConnexion.ReadFromUDP(buf)
+					mutex.Unlock()
+					if err != nil {
+						log.Println("Could not read message from remote udp connexion")
+						continue
+					}
 
-			if message.MessageType == "UPDATE_ENTITY" {
+					message, err := engine.BytesToMessage(buf[:n])
+					if err != nil {
+						continue
+					}
 
-				type CustomUpdateMessage struct {
-					MessageType string                     `json:"message"`
-					Data        messages.UpdateMessageData `json:"data"`
+					if message.MessageType == "UPDATE_ENTITY" {
+
+						type CustomUpdateMessage struct {
+							MessageType string                     `json:"message"`
+							Data        messages.UpdateMessageData `json:"data"`
+						}
+
+						var customMessage CustomUpdateMessage
+
+						if err := json.Unmarshal(buf[:n], &customMessage); err != nil {
+							log.Println("Could not parse custom message", err)
+							continue
+						}
+
+						entity := squirrelGame.World.GetEntity(customMessage.Data.Id)
+
+						if entity != nil {
+							entityLocalised := *entity
+
+							entityLocalised.UpdateComponents(customMessage.Data.Components)
+							// squirrelGame.World.UpdateEntityComponents(entityLocalised.GetId(), customMessage.Data.Components)
+							// log.Println(entityLocalised.GetComponent("position"))
+						}
+						// sync_mutex.Lock()
+						// squirrelGame.Entities = customMessage.Data
+						// sync_mutex.Unlock()
+					}
 				}
-
-				var customMessage CustomUpdateMessage
-
-				if err := json.Unmarshal(buf[:n], &customMessage); err != nil {
-					log.Println("Could not parse custom message", err)
-					continue
-				}
-
-				entity := squirrelGame.World.GetEntity(customMessage.Data.Id)
-
-				if entity != nil {
-					log.Println(*customMessage.Data.Components[0])
-					entityLocalised := *entity
-					entityLocalised.UpdateComponents(customMessage.Data.Components)
-					// squirrelGame.World.UpdateEntityComponents(entityLocalised.GetId(), customMessage.Data.Components)
-					// log.Println(entityLocalised.GetComponent("position"))
-				}
-				// sync_mutex.Lock()
-				// squirrelGame.Entities = customMessage.Data
-				// sync_mutex.Unlock()
-			}
+			}()
 		}
 	}()
 

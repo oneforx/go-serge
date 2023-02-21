@@ -23,14 +23,13 @@ func (ss *BulletSystem) GetId() uuid.UUID {
 }
 
 func (ss *BulletSystem) Update() {
-
 	worldLocalised := *ss.World
 	bulletEntities := worldLocalised.GetEntitiesWithStrictComposition(library.BULLET_COMPOSITION)
 	for _, bullet := range bulletEntities {
 		bulletLocalised := *bullet
 
-		bulletPositionComponent := *bulletLocalised.GetComponent("position")
-		bulletPosition, ok := bulletPositionComponent.GetData().(map[string]interface{})
+		bulletPositionComponent := bulletLocalised.GetComponent("position")
+		bulletPosition, ok := bulletPositionComponent.Data.(map[string]interface{})
 		if !ok {
 			continue
 		}
@@ -47,6 +46,8 @@ func (ss *BulletSystem) Update() {
 			"origin_x": bulletPosition["origin_x"],
 			"origin_y": bulletPosition["origin_y"],
 		})
+
+		log.Println(bulletPositionComponent.Data)
 
 		// playerEntities := worldLocalised.GetEntitiesWithStrictComposition(library.PLAYER_COMPOSITION)
 		// for _, player := range playerEntities {

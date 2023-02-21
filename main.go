@@ -94,11 +94,11 @@ func main() {
 		gameWorld.AddEntity(entityLocation)
 	}
 
-	// var bulletSystem ecs.ISystem = &systems.BulletSystem{
-	// 	Id:    uuid.New(),
-	// 	Name:  "bullet",
-	// 	World: &gameWorld,
-	// }
+	var bulletSystem ecs.ISystem = &systems.BulletSystem{
+		Id:    uuid.New(),
+		Name:  "bullet",
+		World: &gameWorld,
+	}
 
 	var netUpdateSystem ecs.ISystem = &systems.NetUpdateSystem{
 		Id:           uuid.New(),
@@ -107,7 +107,7 @@ func main() {
 		World:        &gameWorld,
 	}
 
-	// gameWorld.AddSystem(&bulletSystem)
+	gameWorld.AddSystem(&bulletSystem)
 	gameWorld.AddSystem(&netUpdateSystem)
 
 	// Run world.Update()
@@ -115,7 +115,9 @@ func main() {
 		ticker := time.NewTicker(time.Second / 120) // Crée un ticker qui envoie un signal toutes les 1/60ème de seconde
 		defer ticker.Stop()                         // Arrête le ticker quand la fonction main se termine
 		for range ticker.C {
+			sync_mutex.Lock()
 			gameWorld.Update()
+			sync_mutex.Unlock()
 		}
 	}()
 
@@ -499,10 +501,12 @@ func main() {
 					}
 				}()
 			case "ORIENTATION":
-				// mousePosition, ok := handleMessage.Data.(map[string]int)
-				// if !ok {
-				// 	log.Println("Could not parse CS_ORIENTATION data to map[string]int")
-				// }
+				mousePosition, ok := message.Data.(map[string]interface{})
+				if !ok {
+					log.Println("Could not parse CS_ORIENTATION data to map[string]int")
+				}
+
+				log.Println(mousePosition)
 			}
 		})
 	}()

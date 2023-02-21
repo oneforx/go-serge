@@ -205,8 +205,6 @@ func (world *World) GetEntitiesWithComposition(composition Composition) (entitie
 }
 
 func (world *World) GetEntitiesWithStrictComposition(composition Composition) (entities []*IEntity) {
-	world.entitiesMutex.Lock()
-	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.GetEntities() {
 		entityLocalised := *entity
 		if len(composition) == len(entityLocalised.GetComponents()) && entityLocalised.HaveComposition(composition) {

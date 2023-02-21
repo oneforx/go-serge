@@ -21,7 +21,7 @@ type ServerEngine struct {
 	UdpConnexions map[string]*net.UDPAddr
 	UdpMessages   map[string]chan []byte
 
-	serverMutex sync.Mutex
+	ServerMutex sync.RWMutex
 }
 
 type Client struct {
@@ -80,18 +80,18 @@ func (se *ServerEngine) ListenTCP(connexionHandler func(connexion *net.TCPConn))
 			continue
 		}
 
-		se.serverMutex.Lock()
+		se.ServerMutex.Lock()
 		if se.TcpConnexions[tcpConnexion.RemoteAddr().String()] == nil {
 			se.TcpConnexions[tcpConnexion.RemoteAddr().String()] = tcpConnexion
 		}
-		se.serverMutex.Unlock()
+		se.ServerMutex.Unlock()
 
-		se.serverMutex.Lock()
+		se.ServerMutex.Lock()
 		// Vérifiez si la connexion est fermée avant de l'utiliser
 		if tcpConnexion == nil || tcpConnexion.RemoteAddr() == nil {
 			continue
 		}
-		se.serverMutex.Unlock()
+		se.ServerMutex.Unlock()
 
 		log.Printf("Got a client %v", tcpConnexion.RemoteAddr().String())
 
@@ -111,13 +111,13 @@ func (se *ServerEngine) ListenMessages(messageHandler func(message Message, addr
 			continue
 		}
 
-		se.serverMutex.Lock()
+		se.ServerMutex.Lock()
 		_, ok := se.UdpConnexions[addr.String()]
-		se.serverMutex.Unlock()
+		se.ServerMutex.Unlock()
 		if !ok {
-			se.serverMutex.Lock()
+			se.ServerMutex.Lock()
 			se.UdpConnexions[addr.String()] = addr
-			se.serverMutex.Unlock()
+			se.ServerMutex.Unlock()
 		}
 
 		message, err := BytesToMessage(buf[:n])
@@ -125,7 +125,7 @@ func (se *ServerEngine) ListenMessages(messageHandler func(message Message, addr
 			continue
 		}
 
-		go messageHandler(message, addr)
+		messageHandler(message, addr)
 	}
 }
 
@@ -141,28 +141,28 @@ func (se *ServerEngine) ListenUDP(connexionHandler func(*net.UDPConn, *net.UDPAd
 			continue
 		}
 
-		se.serverMutex.Lock()
+		se.ServerMutex.Lock()
 		_, ok := se.UdpConnexions[addr.String()]
-		se.serverMutex.Unlock()
+		se.ServerMutex.Unlock()
 		if !ok {
-			se.serverMutex.Lock()
+			se.ServerMutex.Lock()
 			se.UdpMessages[addr.String()] = make(chan []byte, 1000)
-			se.serverMutex.Unlock()
+			se.ServerMutex.Unlock()
 			go connexionHandler(se.UdpListener, addr, se.UdpMessages[addr.String()])
 		}
 
-		se.serverMutex.Lock()
+		se.ServerMutex.Lock()
 		if se.UdpConnexions[addr.String()] == nil {
 			se.UdpConnexions[addr.String()] = addr
 		}
-		se.serverMutex.Unlock()
+		se.ServerMutex.Unlock()
 
 		// Ici envois le message dans le channel
 		// C'est mieux qu'un select
 		go func() {
-			se.serverMutex.Lock()
+			se.ServerMutex.Lock()
 			se.UdpMessages[addr.String()] <- buf[:n]
-			se.serverMutex.Unlock()
+			se.ServerMutex.Unlock()
 		}()
 
 	}
