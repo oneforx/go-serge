@@ -370,6 +370,8 @@ func main() {
 	// Création de la fenêtre de l'application SquirrelGame
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Squirrel Game")
+	ebiten.SetTPS(120)
+	ebiten.SetCursorShape(ebiten.CursorShapeCrosshair)
 
 	if err := ebiten.RunGame(squirrelGame); err != nil {
 		panic(err)

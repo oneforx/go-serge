@@ -493,7 +493,7 @@ func main() {
 								case "RIGHT":
 									positionComponentDataParsed["x"] = x + 2
 								}
-
+								
 								log.Println(positionComponentLocalised.GetData())
 								sync_mutex.Unlock()
 							}

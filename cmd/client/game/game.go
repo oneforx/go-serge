@@ -222,6 +222,7 @@ func (g *SquirrelGame) Draw(screen *ebiten.Image) {
 				Filter:        0,
 			}
 			ebitenutil.DrawRect(screen, 0, 0, 32, 32, color.RGBA{255, 255, 255, 255})
+			imageOption.Filter = ebiten.FilterLinear
 			imageOption.GeoM.Translate(x-float64(g.Camera.X), y-float64(g.Camera.Y))
 			screen.DrawImage(img, imageOption)
 		}
