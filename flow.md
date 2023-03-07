@@ -95,3 +95,16 @@ Répertorier les components qui ont besoin d'être vue par les autres
         LOCAL -> Tout ceux qui voit l'entité sont au courant du changement, comme par exemple la position
         WORLD -> Peut être envoyer à tout le monde
         PRIVATE -> Peut être envoyer qu'au propriétaire
+
+Système de mod
+ModFolder
+    library
+        - Components
+        - Entities
+        - Systems
+
+Architecture
+    Redis -> World Database
+    WorldServer -> Gestion du monde
+    ApiServer -> Gestion de l'authentification / Management des ressources
+
