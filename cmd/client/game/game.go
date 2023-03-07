@@ -6,13 +6,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
-	"github.com/bawdeveloppement/squirrelgameserver/engine"
-	"github.com/bawdeveloppement/squirrelgameserver/messages"
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/messages"
 )
 
 type ClientServer struct {
@@ -42,40 +42,40 @@ func (g *SquirrelGame) Update() error {
 	width, height := ebiten.WindowSize()
 
 	if entities := g.World.GetEntitiesPossessedBy(*g.Token); len(entities) > 0 {
-		player := *entities[0]
-		playerPosition, ok := player.GetComponent("position").Data.(map[string]interface{})
-		if !ok {
-			log.Println("Could not parse player position to map[string]interface{}")
-		}
-		x, ok := playerPosition["x"].(float64)
-		if !ok {
-			log.Println("Could not parse x to float64")
-		}
-		y, ok := playerPosition["y"].(float64)
-		if !ok {
-			log.Println("Could not parse y to float64")
-		}
-		g.Camera.X = int(x) - width/2
-		g.Camera.Y = int(y) - height/2
+		// player := *entities[0]
+		// playerPosition, ok := player.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}).Data.(map[string]interface{})
+		// if !ok {
+		// 	log.Println("Could not parse player position to map[string]interface{}")
+		// }
+		// x, ok := playerPosition["x"].(float64)
+		// if !ok {
+		// 	log.Println("Could not parse x to float64")
+		// }
+		// y, ok := playerPosition["y"].(float64)
+		// if !ok {
+		// 	log.Println("Could not parse y to float64")
+		// }
+		g.Camera.X = int(0) - width/2
+		g.Camera.Y = int(0) - height/2
 	} else {
 		g.Camera.X = 0
 		g.Camera.Y = 0
 	}
 	// Si on a une entité que l'on posséde
 	if entitiesWeOwn := g.World.GetEntitiesPossessedBy(*g.Token); len(entitiesWeOwn) > 0 {
-		player := *entitiesWeOwn[0]
-		playerPosition, ok := player.GetComponent("position").Data.(map[string]interface{})
-		if !ok {
-			log.Println("Could not parse player position to map[string]interface{}")
-		}
-		_, ok = playerPosition["x"].(float64)
-		if !ok {
-			log.Println("Could not parse x to float64")
-		}
-		_, ok = playerPosition["y"].(float64)
-		if !ok {
-			log.Println("Could not parse y to float64")
-		}
+		// player := *entitiesWeOwn[0]
+		// playerPosition, ok := player.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}).Data.(map[string]interface{})
+		// if !ok {
+		// 	log.Println("Could not parse player position to map[string]interface{}")
+		// }
+		// _, ok = playerPosition["x"].(float64)
+		// if !ok {
+		// 	log.Println("Could not parse x to float64")
+		// }
+		// _, ok = playerPosition["y"].(float64)
+		// if !ok {
+		// 	log.Println("Could not parse y to float64")
+		// }
 
 		mx, my := ebiten.CursorPosition()
 
@@ -187,7 +187,7 @@ func (g *SquirrelGame) Draw(screen *ebiten.Image) {
 	if len(g.World.GetEntities()) > 0 {
 		for _, entity := range g.World.GetEntities() {
 			entityLocalisation := *entity
-			positionComponent := entityLocalisation.GetComponent("position")
+			positionComponent := entityLocalisation.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
 			if positionComponent == nil {
 				log.Println("dazddzdzzdddda")
 				continue

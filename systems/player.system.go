@@ -1,8 +1,8 @@
 package systems
 
 import (
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
 	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/ecs"
 )
 
 type PlayerSystem struct {

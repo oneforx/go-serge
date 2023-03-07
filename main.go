@@ -2,17 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
+	"plugin"
 	"sync"
 	"time"
 
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
-	"github.com/bawdeveloppement/squirrelgameserver/engine"
-	"github.com/bawdeveloppement/squirrelgameserver/library"
-	"github.com/bawdeveloppement/squirrelgameserver/messages"
-	"github.com/bawdeveloppement/squirrelgameserver/systems"
 	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/library"
+	"github.com/oneforx/go-serge/messages"
+	"github.com/oneforx/go-serge/systems"
 )
 
 type Client struct {
@@ -34,16 +38,45 @@ var (
 	UDP NET_MODE = "UDP"
 )
 
-type Player struct {
-	X      int
-	Y      int
-	Killed bool
-}
-
-func (player Player) Move() {
-}
+var (
+	LibraryManager = &library.LibraryManager{
+		Libraries: map[ecs.Identifier]library.Library{},
+	}
+)
 
 func init() {
+
+	modDirectory := "./mods"
+
+	err := filepath.Walk(modDirectory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			p, err := plugin.Open(path)
+			if err != nil {
+				return err
+			}
+
+			loadPlugin, err := p.Lookup("Load")
+			if err != nil {
+				panic(err)
+			}
+
+			newLibrary := loadPlugin.(func() library.ILibrary)()
+
+			log.Println("LOADING " + newLibrary.GetId().String())
+			log.Println(newLibrary.GetSystems())
+			LibraryManager.AddLibrary(newLibrary.GetId(), newLibrary.GetStruct())
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
 	// Récupérer la sauvegarde du monde
 	// saveFichier -> &World{}
 }
@@ -84,9 +117,9 @@ func main() {
 
 	var gameEntities []*ecs.IEntity = []*ecs.IEntity{
 		ecs.CEntityPossessed(&gameWorld, uuid.New(), newUUID, []*ecs.Component{
-			library.COMPONENT_POSITION(0, 0),
-			library.COMPONENT_DIMENSION(32, 32),
-			library.COMPONENT_SOLID(true),
+			LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}, map[string]interface{}{"x": 0.0, "y": 0.0, "origin_x": 0.0, "origin_y": 0.0, "vel_x": 0.0, "vel_y": 0.0}),
+			LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "dimension"}, map[string]interface{}{"width": 0, "height": 0}),
+			LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "solid"}, true),
 		}),
 	}
 
@@ -94,20 +127,21 @@ func main() {
 		gameWorld.AddEntity(entityLocation)
 	}
 
-	var bulletSystem ecs.ISystem = &systems.BulletSystem{
-		Id:    uuid.New(),
-		Name:  "bullet",
-		World: &gameWorld,
-	}
-
 	var netUpdateSystem ecs.ISystem = &systems.NetUpdateSystem{
-		Id:           uuid.New(),
-		Name:         "bullet",
+		Id: ecs.Identifier{
+			Namespace: "oneforx",
+			Path:      "update",
+		},
+		Name:         "net_update",
 		ServerEngine: &serverEngine,
 		World:        &gameWorld,
 	}
 
-	gameWorld.AddSystem(&bulletSystem)
+	system, err := LibraryManager.InstantiateSystem(ecs.Identifier{Namespace: "oneforx", Path: "bullet"}, &gameWorld)
+	if err != nil {
+		panic(err)
+	}
+	gameWorld.AddSystem(system)
 	gameWorld.AddSystem(&netUpdateSystem)
 
 	// Run world.Update()
@@ -300,7 +334,15 @@ func main() {
 
 					if foundId != nil {
 
-						newBullet := library.ENTITY_BULLET(&gameWorld, uuid.New(), *foundId, 0, 0, 0)
+						newBullet := ecs.CEntityWithOwner(&gameWorld, uuid.New(), *foundId, []*ecs.Component{
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}, map[string]interface{}{"x": 0.0, "y": 0.0, "origin_x": 0.0, "origin_y": 0.0, "vel_x": 0.0, "vel_y": 0.0}),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "dimension"}, map[string]interface{}{"width": 0, "height": 0}),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "solid"}, true),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "force"}, 0),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "orientation"}, 0),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "speed"}, 10),
+							LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "distance"}, 1000),
+						})
 
 						gameWorld.AddEntity(newBullet)
 
@@ -333,7 +375,11 @@ func main() {
 						entitiesPossessed := gameWorld.GetEntitiesPossessedBy(*foundId)
 						log.Println(len(entitiesPossessed))
 						if len(entitiesPossessed) == 0 {
-							gameWorld.AddEntity(library.ENTITY_PLAYER(&gameWorld, uuid.New(), *foundId))
+							gameWorld.AddEntity(ecs.CEntityPossessed(&gameWorld, uuid.New(), *foundId, []*ecs.Component{
+								LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}, map[string]interface{}{"x": 0.0, "y": 0.0, "origin_x": 0.0, "origin_y": 0.0, "vel_x": 0.0, "vel_y": 0.0}),
+								LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "dimension"}, map[string]interface{}{"width": 0, "height": 0}),
+								LibraryManager.InstantiateComponent(ecs.Identifier{Namespace: "oneforx", Path: "solid"}, true),
+							}))
 						}
 
 						bytes, err := engine.MessageToBytes(messages.SC_CREATE_WORLD(gameWorld.GetEntitiesNoCycle()))
@@ -468,7 +514,7 @@ func main() {
 								sync_mutex.Lock()
 
 								entityLocalised := *entity
-								positionComponent := entityLocalised.GetComponent("position")
+								positionComponent := entityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
 								if positionComponent == nil {
 									log.Println("Could not get component position")
 									continue
@@ -493,7 +539,7 @@ func main() {
 								case "RIGHT":
 									positionComponentDataParsed["x"] = x + 2
 								}
-								
+
 								log.Println(positionComponentLocalised.GetData())
 								sync_mutex.Unlock()
 							}
@@ -636,7 +682,7 @@ func main() {
 										sync_mutex.Lock()
 
 										entityLocalised := *entity
-										positionComponent := entityLocalised.GetComponent("position")
+										positionComponent := entityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
 										if positionComponent == nil {
 											log.Println("Could not get component position")
 											continue

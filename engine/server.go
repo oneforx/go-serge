@@ -7,8 +7,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
 	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/ecs"
 )
 
 type ServerEngine struct {

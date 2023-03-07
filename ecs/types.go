@@ -39,3 +39,12 @@ func (source Composition) Equals(target Composition) bool {
 	}
 	return true
 }
+
+type Identifier struct {
+	Namespace string `json:"namespace"`
+	Path      string `json:"path"`
+}
+
+func (id Identifier) String() string {
+	return fmt.Sprintf("%s:%s", id.Namespace, id.Path)
+}

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bawdeveloppement/squirrelgameserver/cmd/client/game"
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
-	"github.com/bawdeveloppement/squirrelgameserver/engine"
-	"github.com/bawdeveloppement/squirrelgameserver/messages"
 	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/cmd/client/game"
+	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/messages"
 
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2"

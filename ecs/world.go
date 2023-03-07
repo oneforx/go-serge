@@ -17,12 +17,13 @@ type IWorld interface {
 	AddEntitiesFromEntitiesNoCycle(entitiesNoCycle []EntityNoCycle)
 	// UUID should be an external ID maybe a ClientID
 	GetEntitiesPossessedBy(uuid.UUID) []*IEntity
-	GetEntitiesByComponentId(string) []*IEntity
+	GetEntitiesByComponentId(Identifier) []*IEntity
 	// EN: Get entities which have at least the specified components name.
 	//     Returns a slice of IEntity pointers.
 	// FR: Obtiens les entités qui ont au moins les composants spécifiés.
 	//     Retourne une tranche de pointeurs IEntity.
-	GetEntitiesWithComponents(...string) []*IEntity
+	GetEntitiesWithComponents(...Identifier) []*IEntity
+	GetEntitiesWithComponentsIdString(...string) []*IEntity
 	// Get entities wich have the components specified by the array of component name.
 	GetEntitiesWithStrictComposition(Composition) []*IEntity
 	// EN: Get entities which at least the specified composition
@@ -33,8 +34,8 @@ type IWorld interface {
 	UpdateEntityComponents(uuid.UUID, []*Component) *FeedBack
 	RemoveEntity(uuid.UUID) *FeedBack
 	AddSystem(*ISystem)
-	GetSystemById(uuid.UUID) *ISystem
-	RemoveSystem(uuid.UUID) *FeedBack
+	GetSystemById(Identifier) *ISystem
+	RemoveSystem(Identifier) *FeedBack
 	Update()
 }
 
@@ -159,7 +160,7 @@ func (world *World) GetEntitiesPossessedBy(possessedId uuid.UUID) (entities []*I
 	return entities
 }
 
-func (world *World) GetEntitiesByComponentId(id string) (entities []*IEntity) {
+func (world *World) GetEntitiesByComponentId(id Identifier) (entities []*IEntity) {
 	world.entitiesMutex.Lock()
 	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
@@ -174,7 +175,7 @@ func (world *World) GetEntitiesByComponentId(id string) (entities []*IEntity) {
 	return entities
 }
 
-func (world *World) GetEntitiesWithComponents(v ...string) (entities []*IEntity) {
+func (world *World) GetEntitiesWithComponents(v ...Identifier) (entities []*IEntity) {
 	world.entitiesMutex.Lock()
 	defer world.entitiesMutex.Unlock()
 	for _, entity := range world.Entities {
@@ -192,6 +193,23 @@ func (world *World) GetEntitiesWithComponents(v ...string) (entities []*IEntity)
 	return entities
 }
 
+func (world *World) GetEntitiesWithComponentsIdString(v ...string) (entities []*IEntity) {
+	world.entitiesMutex.Lock()
+	defer world.entitiesMutex.Unlock()
+	for _, entity := range world.Entities {
+		entityLocalised := *entity
+		var checkeds int = 0
+		for _, cmpName := range v {
+			if entityLocalised.HaveComponentByIdString(cmpName) {
+				checkeds = checkeds + 1
+			}
+		}
+		if checkeds == len(v) {
+			entities = append(entities, entity)
+		}
+	}
+	return entities
+}
 func (world *World) GetEntitiesWithComposition(composition Composition) (entities []*IEntity) {
 	world.entitiesMutex.Lock()
 	defer world.entitiesMutex.Unlock()
@@ -256,7 +274,7 @@ func (world *World) AddSystem(sys *ISystem) {
 	world.Systems = append(world.Systems, sys)
 }
 
-func (world *World) GetSystemById(id uuid.UUID) *ISystem {
+func (world *World) GetSystemById(id Identifier) *ISystem {
 	var systemFound *ISystem
 	for _, system := range world.GetSystems() {
 		systemLocalised := *system
@@ -271,7 +289,7 @@ func (world *World) GetSystems() []*ISystem {
 	return world.Systems
 }
 
-func (world *World) RemoveSystem(id uuid.UUID) (err *FeedBack) {
+func (world *World) RemoveSystem(id Identifier) (err *FeedBack) {
 	var newSystems []*ISystem = []*ISystem{}
 	var systemFound bool = false
 

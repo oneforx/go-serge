@@ -8,13 +8,15 @@ import (
 )
 
 type IEntity interface {
+	GetTypeID() Identifier
 	GetWorld() *IWorld
 	GetId() uuid.UUID
 	GetOwnerID() uuid.UUID
 	GetPossessedID() uuid.UUID
 	AddComponent(cmp Component) error
-	HaveComponent(cn string) bool
-	GetComponent(id string) *Component
+	HaveComponent(cn Identifier) bool
+	HaveComponentByIdString(cn string) bool
+	GetComponent(id Identifier) *Component
 	GetComponents() []*Component
 	GetComposition() []string
 	UpdateComponents([]*Component)
@@ -25,6 +27,7 @@ type IEntity interface {
 type Entity struct {
 	Id          uuid.UUID `json:"id"`
 	OwnerID     uuid.UUID `json:"ownerId"` // ClientID
+	TypeID      Identifier
 	PossessedID uuid.UUID `json:"possessedId"`
 	World       *IWorld
 	Components  []*Component `json:"components"`
@@ -46,6 +49,9 @@ func (entity *Entity) GetOwnerID() uuid.UUID {
 	return entity.OwnerID
 }
 
+func (entity *Entity) GetTypeID() Identifier {
+	return entity.TypeID
+}
 func (entity *Entity) GetPossessedID() uuid.UUID {
 	return entity.PossessedID
 }
@@ -56,7 +62,7 @@ func (entity *Entity) AddComponent(cmp Component) error {
 
 	for idx, component := range entity.GetComponents() {
 		componentLocalised := *component
-		if componentLocalised.GetId() == cmp.GetId() {
+		if componentLocalised.GetId().String() == cmp.GetId().String() {
 			foundId = idx
 		}
 	}
@@ -74,7 +80,7 @@ func (entity *Entity) UpdateComponents(components []*Component) {
 		baseComponent := entity.GetComponent(c.GetId())
 
 		if baseComponent != nil {
-			if baseComponent.Id == "position" {
+			if baseComponent.Id.Path == "position" {
 				// Ici un middleware pour interpoler l'état de l'entité afin d'avoir un rendu plus fluide
 				destinationPosition, destinationPositionOk := c.Data.(map[string]interface{})
 				if !destinationPositionOk {
@@ -133,20 +139,28 @@ func (entity *Entity) UpdateComponents(components []*Component) {
 	}
 }
 
-func (entity *Entity) HaveComponent(cn string) bool {
+func (entity *Entity) HaveComponent(cn Identifier) bool {
 	for _, component := range entity.Components {
 		componentLocalised := *component
-		if componentLocalised.GetId() == cn {
+		if componentLocalised.GetId().String() == cn.String() {
 			return true
 		}
 	}
 	return false
 }
-
-func (entity *Entity) GetComponent(id string) (cmp *Component) {
+func (entity *Entity) HaveComponentByIdString(cn string) bool {
+	for _, component := range entity.Components {
+		componentLocalised := *component
+		if componentLocalised.GetId().String() == cn {
+			return true
+		}
+	}
+	return false
+}
+func (entity *Entity) GetComponent(id Identifier) (cmp *Component) {
 	for _, component := range entity.GetComponents() {
 		componentLocalised := *component
-		if componentLocalised.GetId() == id {
+		if componentLocalised.GetId().Namespace == id.Namespace && componentLocalised.GetId().Path == id.Path {
 			cmp = component
 		}
 	}
@@ -160,7 +174,7 @@ func (entity *Entity) GetComponents() (components []*Component) {
 func (entity *Entity) GetComposition() (composition []string) {
 	for _, component := range entity.Components {
 		cmp := *component
-		composition = append(composition, cmp.GetId())
+		composition = append(composition, cmp.GetId().String())
 	}
 	return composition
 }

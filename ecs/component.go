@@ -1,22 +1,22 @@
 package ecs
 
 type IComponent interface {
-	GetId() string
+	GetId() Identifier
 	GetData() interface{}
 	SetData(v interface{})
 	GetStructure() *Component
 }
 
 type Component struct {
-	Id   string      `json:"id"`
+	Id   Identifier  `json:"id"`
 	Data interface{} `json:"data"`
 }
 
-func CreateComponent(id string, data interface{}) *Component {
+func CreateComponent(id Identifier, data interface{}) *Component {
 	return &Component{Id: id, Data: data}
 }
 
-func (p *Component) GetId() string {
+func (p *Component) GetId() Identifier {
 	return p.Id
 }
 

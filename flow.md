@@ -108,3 +108,9 @@ Architecture
     WorldServer -> Gestion du monde
     ApiServer -> Gestion de l'authentification / Management des ressources
 
+FLOW LANCEMENT DU SERVER
+    - CHARGEMENT DES MODS
+        - Inscription des composants, entités, systems
+    - CREATION DU MONDE
+        - READ world.dat
+    - LANCEMENT DU SERVER

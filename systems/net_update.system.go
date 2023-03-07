@@ -4,24 +4,27 @@ import (
 	"log"
 	"sync"
 
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
-	"github.com/bawdeveloppement/squirrelgameserver/engine"
-	"github.com/bawdeveloppement/squirrelgameserver/messages"
-	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/messages"
 )
 
 type NetUpdateSystem struct {
-	Id           uuid.UUID
+	Id           ecs.Identifier
 	Name         string
 	World        *ecs.IWorld
 	ServerEngine *engine.ServerEngine
+}
+
+func (ss *NetUpdateSystem) Init(world *ecs.IWorld) {
+	ss.World = world
 }
 
 func (ss *NetUpdateSystem) GetName() string {
 	return ss.Name
 }
 
-func (ss *NetUpdateSystem) GetId() uuid.UUID {
+func (ss *NetUpdateSystem) GetId() ecs.Identifier {
 	return ss.Id
 }
 

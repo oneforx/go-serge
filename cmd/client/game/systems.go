@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/bawdeveloppement/squirrelgameserver/ecs"
+	"github.com/oneforx/go-serge/ecs"
 )
 
 type CollisionSystem struct {
@@ -21,7 +21,7 @@ func (c *CollisionSystem) Update() {
 
 	mutex.Lock()
 	var world ecs.IWorld = *c.World
-	var entities []*ecs.IEntity = world.GetEntitiesWithComponents("position", "dimension", "solid")
+	var entities []*ecs.IEntity = world.GetEntitiesWithComponents(ecs.Identifier{Namespace: "oneforx", Path: "position"}, ecs.Identifier{Namespace: "oneforx", Path: "dimension"}, ecs.Identifier{Namespace: "oneforx", Path: "solid"})
 
 	for _, firstEntity := range entities {
 		firstEntityLocalised := *firstEntity
@@ -40,7 +40,7 @@ func (c *CollisionSystem) EntityIsInCollisionWith(entity *ecs.IEntity, collidabl
 
 		secondEntityLocalised := *secondEntity
 		if firstEntityLocalised.GetId() != secondEntityLocalised.GetId() {
-			firstPositionComponentPointer := firstEntityLocalised.GetComponent("position")
+			firstPositionComponentPointer := firstEntityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
 			if firstPositionComponentPointer == nil {
 				log.Println("skip drawing of : " + firstEntityLocalised.GetId().String())
 				continue
@@ -54,7 +54,7 @@ func (c *CollisionSystem) EntityIsInCollisionWith(entity *ecs.IEntity, collidabl
 			firstX := firstPositionComponentData["x"].(int)
 			firstY := firstPositionComponentData["y"].(int)
 
-			firstDimensionComponentPointer := firstEntityLocalised.GetComponent("dimension")
+			firstDimensionComponentPointer := firstEntityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "dimension"})
 			if firstDimensionComponentPointer == nil {
 				log.Println("skip drawing of : " + firstEntityLocalised.GetId().String())
 				continue
@@ -69,7 +69,7 @@ func (c *CollisionSystem) EntityIsInCollisionWith(entity *ecs.IEntity, collidabl
 			firstWidth := firstDimensionComponentData["width"].(int)
 			firstHeight := firstDimensionComponentData["height"].(int)
 
-			secondPositionComponentPointer := secondEntityLocalised.GetComponent("position")
+			secondPositionComponentPointer := secondEntityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
 			if secondPositionComponentPointer == nil {
 				log.Println("skip drawing of : " + secondEntityLocalised.GetId().String())
 				continue
@@ -83,7 +83,7 @@ func (c *CollisionSystem) EntityIsInCollisionWith(entity *ecs.IEntity, collidabl
 			var secondX int = secondPositionComponentData["x"].(int)
 			var secondY int = secondPositionComponentData["y"].(int)
 
-			secondDimensionComponentPointer := secondEntityLocalised.GetComponent("dimension")
+			secondDimensionComponentPointer := secondEntityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "dimension"})
 			if secondDimensionComponentPointer != nil {
 				log.Println("skip drawing of : " + secondEntityLocalised.GetId().String())
 				continue

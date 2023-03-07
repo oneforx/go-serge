@@ -1,4 +1,4 @@
-module github.com/bawdeveloppement/squirrelgameserver
+module github.com/oneforx/go-serge
 
 go 1.19
 

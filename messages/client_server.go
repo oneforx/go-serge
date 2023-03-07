@@ -1,8 +1,8 @@
 package messages
 
 import (
-	"github.com/bawdeveloppement/squirrelgameserver/engine"
 	"github.com/google/uuid"
+	"github.com/oneforx/go-serge/engine"
 )
 
 var (
