@@ -142,13 +142,15 @@ Communication between system - OK
         - NatureSystem
             - LISTEN "KILL_ALL"
             - LISTEN "ADD"
+
+v0.0.3
 World.Tiles
 World.Regions
 World.Points
-
-
-
-v0.0.3
+ecs CreateEntityFromComposition(composition_id Identifier) IEntity
+Process a save of the world at time
+Process a save when client request it, only for admin
+Role management for client
 - Online library to see components, systems, compositions, entités instantié
 - Gestion de piéces du monde, une piéce représente une tile
     - SI le joueur est admin

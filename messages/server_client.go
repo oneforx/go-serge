@@ -2,7 +2,7 @@ package messages
 
 import (
 	"github.com/google/uuid"
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/engine"
 )
 

@@ -3,7 +3,7 @@ package library
 import (
 	"fmt"
 
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 )
 
 type LibraryManager struct {

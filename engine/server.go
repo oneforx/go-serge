@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 )
 
 type ServerEngine struct {

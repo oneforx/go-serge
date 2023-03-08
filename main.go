@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/engine"
 	"github.com/oneforx/go-serge/library"
 	"github.com/oneforx/go-serge/messages"
