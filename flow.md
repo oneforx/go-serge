@@ -110,7 +110,55 @@ Architecture
 
 FLOW LANCEMENT DU SERVER
     - CHARGEMENT DES MODS
-        - Inscription des composants, entités, systems
+        - Inscription des composants, systems - OK
+        - Inscription d'entité type
     - CREATION DU MONDE
         - READ world.dat
     - LANCEMENT DU SERVER
+
+A quoi sert les compositions
+Les compositions servent à créer un type d'entité
+
+- CreateEntityFromComposition
+
+v0.0.1
+Créer une entité
+Créer un system
+Créer un composant
+Créer un monde
+Recevoir / Envoyer des messages
+Synchronisation des entité 20%
+Ajout de librairie tierce -> Voir github.com/oneforx/go-serge-example
+
+v0.0.2
+Nettoyage
+Lecture d'une sauvegarde monde
+Validation des composants grace à json schemas
+Communication between system - OK
+    - System.listening map[string]func()
+    - System.listenOn(string)
+    - System.Call(string, ...interface{})
+    - Example
+        - NatureSystem
+            - LISTEN "KILL_ALL"
+            - LISTEN "ADD"
+World.Tiles
+World.Regions
+World.Points
+
+
+
+v0.0.3
+- Online library to see components, systems, compositions, entités instantié
+- Gestion de piéces du monde, une piéce représente une tile
+    - SI le joueur est admin
+        - COMMAND PLACE_TILE(x, y)
+        - COMMAND DELETE_TILE(x, y)
+
+v0.0.4
+- Système de commande
+    - Lancement de la commande -> Check le role du Client
+    - Une commande peut avoir plusieurs argument
+    
+- Gestion de multimonde
+- 

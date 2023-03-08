@@ -1,6 +1,7 @@
 package systems
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -10,10 +11,35 @@ import (
 )
 
 type NetUpdateSystem struct {
+	ecs.System
 	Id           ecs.Identifier
 	Name         string
 	World        *ecs.IWorld
 	ServerEngine *engine.ServerEngine
+	listening    map[string]func(...interface{}) error
+}
+
+func (ss *NetUpdateSystem) Listen(id string, handler func(...interface{}) error) error {
+	_, ok := ss.listening[id]
+	if !ok {
+		ss.listening[id] = handler
+		return nil
+	}
+
+	return fmt.Errorf("the listener [%s] already exist", id)
+}
+
+func (ss *NetUpdateSystem) Call(id string, args ...interface{}) error {
+	listener, ok := ss.listening[id]
+	if !ok {
+		return fmt.Errorf("the listener [%s] don't exist", id)
+	}
+
+	if err := listener(args...); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ss *NetUpdateSystem) Init(world *ecs.IWorld) {

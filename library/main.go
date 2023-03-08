@@ -110,9 +110,10 @@ type ILibrary interface {
 }
 
 type Library struct {
-	Id         ecs.Identifier
-	components []ecs.Component
-	systems    []ecs.ISystem
+	Id           ecs.Identifier
+	components   []ecs.Component
+	systems      []ecs.ISystem
+	compositions map[ecs.Identifier]ecs.Composition
 }
 
 func (library *Library) GetId() ecs.Identifier {
@@ -121,6 +122,20 @@ func (library *Library) GetId() ecs.Identifier {
 
 func (library *Library) AddSystem(system ecs.ISystem) {
 	library.systems = append(library.systems, system)
+}
+
+func (library *Library) AddComposition(id ecs.Identifier, composition ecs.Composition) error {
+	compositionFound, ok := library.compositions[id]
+	if !ok {
+		library.compositions[id] = composition
+		return nil
+	} else {
+		return fmt.Errorf("composition %s found", compositionFound)
+	}
+}
+
+func (library *Library) SetCompositions(compositions map[ecs.Identifier]ecs.Composition) {
+	library.compositions = compositions
 }
 
 func (library *Library) AddComponent(component ecs.Component) {

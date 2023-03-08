@@ -48,3 +48,7 @@ type Identifier struct {
 func (id Identifier) String() string {
 	return fmt.Sprintf("%s:%s", id.Namespace, id.Path)
 }
+
+func (id Identifier) Equals(other Identifier) bool {
+	return id.String() == other.String()
+}
