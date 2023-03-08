@@ -10,7 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/engine"
 	"github.com/oneforx/go-serge/messages"
 )

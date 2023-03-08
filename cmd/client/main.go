@@ -12,8 +12,8 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/cmd/client/game"
-	"github.com/oneforx/go-serge/ecs"
 	"github.com/oneforx/go-serge/engine"
 	"github.com/oneforx/go-serge/messages"
 

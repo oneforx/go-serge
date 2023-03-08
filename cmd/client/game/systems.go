@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/oneforx/go-serge/ecs"
+	"github.com/oneforx/go-ecs"
 )
 
 type CollisionSystem struct {
