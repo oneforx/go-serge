@@ -40,7 +40,7 @@ var (
 
 var (
 	LibraryManager = &library.LibraryManager{
-		Libraries: map[ecs.Identifier]library.Library{},
+		Libraries: map[ecs.Identifier]ecs.Library{},
 	}
 )
 
@@ -64,7 +64,7 @@ func init() {
 				panic(err)
 			}
 
-			newLibrary := loadPlugin.(func() library.ILibrary)()
+			newLibrary := loadPlugin.(func() ecs.ILibrary)()
 
 			log.Println("LOADING " + newLibrary.GetId().String())
 			log.Println(newLibrary.GetSystems())

@@ -1,4 +1,7 @@
 
+prepare:
+	mkdir -p ./bin/server/mods && mkdir -p ./bin/client/mods
+
 dev-server:
 	@echo "\n\t🧠\n"
 	go run .
@@ -10,8 +13,7 @@ dev-client:
 run-build-server:
 	./bin/server/go-serge
 
-build-server:
-	@echo "\n\t🐵\n"
+build-server: prepare
 	go build . && mv go-serge ./bin/server
 
 build-client:
