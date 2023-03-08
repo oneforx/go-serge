@@ -42,21 +42,21 @@ func (g *SquirrelGame) Update() error {
 	width, height := ebiten.WindowSize()
 
 	if entities := g.World.GetEntitiesPossessedBy(*g.Token); len(entities) > 0 {
-		// player := *entities[0]
-		// playerPosition, ok := player.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}).Data.(map[string]interface{})
-		// if !ok {
-		// 	log.Println("Could not parse player position to map[string]interface{}")
-		// }
-		// x, ok := playerPosition["x"].(float64)
-		// if !ok {
-		// 	log.Println("Could not parse x to float64")
-		// }
-		// y, ok := playerPosition["y"].(float64)
-		// if !ok {
-		// 	log.Println("Could not parse y to float64")
-		// }
-		g.Camera.X = int(0) - width/2
-		g.Camera.Y = int(0) - height/2
+		player := *entities[0]
+		playerPosition, ok := player.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"}).Data.(map[string]interface{})
+		if !ok {
+			log.Println("Could not parse player position to map[string]interface{}")
+		}
+		x, ok := playerPosition["x"].(float64)
+		if !ok {
+			log.Println("Could not parse x to float64")
+		}
+		y, ok := playerPosition["y"].(float64)
+		if !ok {
+			log.Println("Could not parse y to float64")
+		}
+		g.Camera.X = int(x) - width/2
+		g.Camera.Y = int(y) - height/2
 	} else {
 		g.Camera.X = 0
 		g.Camera.Y = 0
@@ -159,6 +159,7 @@ func (g *SquirrelGame) Update() error {
 
 	return nil
 }
+
 func GetMouseWorldPosition(mouseX, mouseY int, camera Camera, screen map[string]int, world map[string]int) (int, int) {
 	worldX := camera.X + (mouseX/screen["width"])*world["width"]
 	worldY := camera.Y + (mouseY/screen["height"])*world["height"]
