@@ -2,7 +2,7 @@ package messages
 
 import (
 	"github.com/google/uuid"
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/lib"
 )
 
@@ -31,7 +31,7 @@ var (
 			NetMode:     lib.NET_TCP,
 		}
 	}
-	SC_CREATE_ENTITY = func(entityData ecs.EntityNoCycle) lib.Message {
+	SC_CREATE_ENTITY = func(entityData goecs.EntityNoCycle) lib.Message {
 		return lib.Message{
 			MessageType: "CREATE_ENTITY",
 			Data:        entityData,
@@ -39,7 +39,7 @@ var (
 			NetMode:     lib.NET_TCP,
 		}
 	}
-	SC_UPDATE_ENTITY = func(entityId uuid.UUID, entityData []*ecs.Component) lib.Message {
+	SC_UPDATE_ENTITY = func(entityId uuid.UUID, entityData []*goecs.Component) lib.Message {
 		return lib.Message{
 			MessageType: "UPDATE_ENTITY",
 			Data: UpdateMessageData{
@@ -58,7 +58,7 @@ var (
 			NetMode:     lib.NET_TCP,
 		}
 	}
-	SC_CREATE_WORLD = func(entitiesData []ecs.EntityNoCycle) lib.Message {
+	SC_CREATE_WORLD = func(entitiesData []goecs.EntityNoCycle) lib.Message {
 		return lib.Message{
 			MessageType: "CREATE_WORLD",
 			Data:        entitiesData,

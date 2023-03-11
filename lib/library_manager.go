@@ -3,14 +3,14 @@ package lib
 import (
 	"fmt"
 
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 )
 
 type LibraryManager struct {
-	Libraries map[ecs.Identifier]ILibrary
+	Libraries map[goecs.Identifier]ILibrary
 }
 
-func (lm *LibraryManager) GetLibrary(id ecs.Identifier) *ILibrary {
+func (lm *LibraryManager) GetLibrary(id goecs.Identifier) *ILibrary {
 	library, ok := lm.Libraries[id]
 	if !ok {
 		return nil
@@ -19,7 +19,7 @@ func (lm *LibraryManager) GetLibrary(id ecs.Identifier) *ILibrary {
 }
 
 // Return false if we couldn't add the library
-func (lm *LibraryManager) AddLibrary(id ecs.Identifier, newLibrary ILibrary) bool {
+func (lm *LibraryManager) AddLibrary(id goecs.Identifier, newLibrary ILibrary) bool {
 	if lm.GetLibrary(id) != nil {
 		return false
 	}
@@ -28,8 +28,8 @@ func (lm *LibraryManager) AddLibrary(id ecs.Identifier, newLibrary ILibrary) boo
 	return true
 }
 
-func (lm *LibraryManager) GetComponents() []ecs.Component {
-	var components []ecs.Component = []ecs.Component{}
+func (lm *LibraryManager) GetComponents() []goecs.Component {
+	var components []goecs.Component = []goecs.Component{}
 
 	for _, lib := range lm.Libraries {
 		components = append(components, lib.GetComponents()...)
@@ -38,7 +38,7 @@ func (lm *LibraryManager) GetComponents() []ecs.Component {
 	return components
 }
 
-func (lm *LibraryManager) GetComponent(id ecs.Identifier) (cmp ecs.Component) {
+func (lm *LibraryManager) GetComponent(id goecs.Identifier) (cmp goecs.Component) {
 	for _, library := range lm.Libraries {
 		if library.GetId().Namespace == id.Namespace {
 			for _, component := range library.GetComponents() {
@@ -53,7 +53,7 @@ func (lm *LibraryManager) GetComponent(id ecs.Identifier) (cmp ecs.Component) {
 	return cmp
 }
 
-func (lm *LibraryManager) GetSystem(id ecs.Identifier) (sys ecs.ISystem, err error) {
+func (lm *LibraryManager) GetSystem(id goecs.Identifier) (sys goecs.ISystem, err error) {
 	for _, library := range lm.Libraries {
 		if library.GetId().Namespace == id.Namespace {
 			for _, system := range library.GetSystems() {
@@ -73,8 +73,8 @@ func (lm *LibraryManager) GetSystem(id ecs.Identifier) (sys ecs.ISystem, err err
 	return sys, nil
 }
 
-func (lm *LibraryManager) InstantiateSystem(id ecs.Identifier, world *ecs.IWorld) (*ecs.ISystem, error) {
-	var systemLocation *ecs.ISystem
+func (lm *LibraryManager) InstantiateSystem(id goecs.Identifier, world *goecs.IWorld) (*goecs.ISystem, error) {
+	var systemLocation *goecs.ISystem
 
 	system, err := lm.GetSystem(id)
 	if err != nil {
@@ -88,8 +88,8 @@ func (lm *LibraryManager) InstantiateSystem(id ecs.Identifier, world *ecs.IWorld
 	return systemLocation, nil
 }
 
-func (lm *LibraryManager) InstantiateComponent(id ecs.Identifier, data interface{}) *ecs.Component {
-	var componentLocation *ecs.Component
+func (lm *LibraryManager) InstantiateComponent(id goecs.Identifier, data interface{}) *goecs.Component {
+	var componentLocation *goecs.Component
 
 	component := lm.GetComponent(id)
 

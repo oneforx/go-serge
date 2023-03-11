@@ -5,16 +5,16 @@ import (
 	"log"
 	"sync"
 
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/lib"
 	"github.com/oneforx/go-serge/messages"
 )
 
 type NetUpdateSystem struct {
-	ecs.System
-	Id          ecs.Identifier
+	goecs.System
+	Id          goecs.Identifier
 	Name        string
-	World       *ecs.IWorld
+	World       *goecs.IWorld
 	WorldServer *lib.WorldServer
 	listening   map[string]func(...interface{}) error
 }
@@ -29,7 +29,7 @@ func (ss *NetUpdateSystem) Listen(id string, handler func(...interface{}) error)
 	return fmt.Errorf("the listener [%s] already exist", id)
 }
 
-func (ss *NetUpdateSystem) GetSide() ecs.SIDE {
+func (ss *NetUpdateSystem) GetSide() goecs.SIDE {
 	return ss.Type
 }
 
@@ -46,7 +46,7 @@ func (ss *NetUpdateSystem) Call(id string, args ...interface{}) error {
 	return nil
 }
 
-func (ss *NetUpdateSystem) Init(world *ecs.IWorld) {
+func (ss *NetUpdateSystem) Init(world *goecs.IWorld) {
 	ss.World = world
 }
 
@@ -54,7 +54,7 @@ func (ss *NetUpdateSystem) GetName() string {
 	return ss.Name
 }
 
-func (ss *NetUpdateSystem) GetId() ecs.Identifier {
+func (ss *NetUpdateSystem) GetId() goecs.Identifier {
 	return ss.Id
 }
 
@@ -70,7 +70,7 @@ func (ss *NetUpdateSystem) UpdateServer() {
 		for _, entity := range worldLocalised.GetEntities() {
 			entityLocalised := *entity
 
-			var components []*ecs.Component = []*ecs.Component{}
+			var components []*goecs.Component = []*goecs.Component{}
 
 			for _, cmp := range entityLocalised.GetComponents() {
 				cmpLocalised := *cmp

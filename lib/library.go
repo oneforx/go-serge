@@ -3,37 +3,37 @@ package lib
 import (
 	"errors"
 
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 )
 
 // A library system to store content
 type ILibrary interface {
-	GetId() ecs.Identifier
+	GetId() goecs.Identifier
 	GetStruct() Library
 
-	GetCompositions() []ecs.Composition
-	GetComponents() []ecs.Component
-	GetSystems() []ecs.ISystem
+	GetCompositions() []goecs.Composition
+	GetComponents() []goecs.Component
+	GetSystems() []goecs.ISystem
 
-	RegisterSystem(ecs.ISystem) error
-	RegisterSystems([]ecs.ISystem) error
+	RegisterSystem(goecs.ISystem) error
+	RegisterSystems([]goecs.ISystem) error
 
-	RegisterComponent(ecs.Component) error
-	RegisterComponents([]ecs.Component) error
-	RegisterComposition(ecs.Composition) error
-	RegisterCompositions([]ecs.Composition) error
+	RegisterComponent(goecs.Component) error
+	RegisterComponents([]goecs.Component) error
+	RegisterComposition(goecs.Composition) error
+	RegisterCompositions([]goecs.Composition) error
 }
 type Library struct {
-	Id           ecs.Identifier
-	components   []ecs.Component
-	systems      []ecs.ISystem
-	compositions []ecs.Composition
+	Id           goecs.Identifier
+	components   []goecs.Component
+	systems      []goecs.ISystem
+	compositions []goecs.Composition
 
-	serverMessageHandlers map[ecs.Identifier]func(message Message, world *WorldServer)
-	clientMessageHandlers map[ecs.Identifier]func(message Message, world *WorldClient)
+	serverMessageHandlers map[goecs.Identifier]func(message Message, world *WorldServer)
+	clientMessageHandlers map[goecs.Identifier]func(message Message, world *WorldClient)
 }
 
-func (lib Library) GetId() ecs.Identifier {
+func (lib Library) GetId() goecs.Identifier {
 	return lib.Id
 }
 
@@ -41,19 +41,19 @@ func (lib Library) GetStruct() Library {
 	return lib
 }
 
-func (lib Library) GetCompositions() []ecs.Composition {
+func (lib Library) GetCompositions() []goecs.Composition {
 	return lib.compositions
 }
 
-func (lib Library) GetComponents() []ecs.Component {
+func (lib Library) GetComponents() []goecs.Component {
 	return lib.components
 }
 
-func (lib Library) GetSystems() []ecs.ISystem {
+func (lib Library) GetSystems() []goecs.ISystem {
 	return lib.systems
 }
 
-func (lib *Library) RegisterSystem(system ecs.ISystem) error {
+func (lib *Library) RegisterSystem(system goecs.ISystem) error {
 	if lib.systemExists(system) {
 		return errors.New("system already exists")
 	}
@@ -61,7 +61,7 @@ func (lib *Library) RegisterSystem(system ecs.ISystem) error {
 	return nil
 }
 
-func (lib *Library) RegisterSystems(systems []ecs.ISystem) error {
+func (lib *Library) RegisterSystems(systems []goecs.ISystem) error {
 	for _, system := range systems {
 		if lib.systemExists(system) {
 			return errors.New("system already exists")
@@ -71,7 +71,7 @@ func (lib *Library) RegisterSystems(systems []ecs.ISystem) error {
 	return nil
 }
 
-func (lib *Library) RegisterComponent(component ecs.Component) error {
+func (lib *Library) RegisterComponent(component goecs.Component) error {
 	if lib.componentExists(component.Id) {
 		return errors.New("component already exists")
 	}
@@ -79,7 +79,7 @@ func (lib *Library) RegisterComponent(component ecs.Component) error {
 	return nil
 }
 
-func (lib *Library) RegisterComponents(components []ecs.Component) error {
+func (lib *Library) RegisterComponents(components []goecs.Component) error {
 	for _, component := range components {
 		if lib.componentExists(component.Id) {
 			return errors.New("component already exists")
@@ -89,7 +89,7 @@ func (lib *Library) RegisterComponents(components []ecs.Component) error {
 	return nil
 }
 
-func (lib *Library) RegisterComposition(composition ecs.Composition) error {
+func (lib *Library) RegisterComposition(composition goecs.Composition) error {
 	if lib.compositionExists(composition.Id) {
 		return errors.New("composition already exists")
 	}
@@ -97,7 +97,7 @@ func (lib *Library) RegisterComposition(composition ecs.Composition) error {
 	return nil
 }
 
-func (lib *Library) RegisterCompositions(compositions []ecs.Composition) error {
+func (lib *Library) RegisterCompositions(compositions []goecs.Composition) error {
 	for _, composition := range compositions {
 		if lib.compositionExists(composition.Id) {
 			return errors.New("composition already exists")
@@ -107,7 +107,7 @@ func (lib *Library) RegisterCompositions(compositions []ecs.Composition) error {
 	return nil
 }
 
-func (lib *Library) componentExists(id ecs.Identifier) bool {
+func (lib *Library) componentExists(id goecs.Identifier) bool {
 	for _, component := range lib.components {
 		if component.Id == id {
 			return true
@@ -116,7 +116,7 @@ func (lib *Library) componentExists(id ecs.Identifier) bool {
 	return false
 }
 
-func (lib *Library) systemExists(system ecs.ISystem) bool {
+func (lib *Library) systemExists(system goecs.ISystem) bool {
 	for _, s := range lib.systems {
 		if s.GetId() == system.GetId() {
 			return true
@@ -125,7 +125,7 @@ func (lib *Library) systemExists(system ecs.ISystem) bool {
 	return false
 }
 
-func (lib *Library) compositionExists(id ecs.Identifier) bool {
+func (lib *Library) compositionExists(id goecs.Identifier) bool {
 	for _, composition := range lib.compositions {
 		if composition.Id == id {
 			return true
@@ -135,7 +135,7 @@ func (lib *Library) compositionExists(id ecs.Identifier) bool {
 	return false
 }
 
-func (lib *Library) RegisterHandlerServerMessage(id ecs.Identifier, handler func(Message, *WorldServer)) {
+func (lib *Library) RegisterHandlerServerMessage(id goecs.Identifier, handler func(Message, *WorldServer)) {
 	if lib.Id.Namespace != id.Namespace {
 		panic("your message id namespace should be the same as the namespace of your library")
 	}
@@ -148,7 +148,7 @@ func (lib *Library) RegisterHandlerServerMessage(id ecs.Identifier, handler func
 	lib.serverMessageHandlers[id] = handler
 }
 
-func (lib *Library) RegisterHandlerClientMessage(id ecs.Identifier, handler func(Message, *WorldClient)) {
+func (lib *Library) RegisterHandlerClientMessage(id goecs.Identifier, handler func(Message, *WorldClient)) {
 	if lib.Id.Namespace != id.Namespace {
 		panic("your message id namespace should be the same as the namespace of your library")
 	}

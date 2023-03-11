@@ -1,9 +1,9 @@
 package lib
 
-import "github.com/oneforx/go-ecs"
+import goecs "github.com/oneforx/go-ecs"
 
 type WorldClient struct {
-	World *ecs.IWorld
+	World *goecs.IWorld
 
 	States map[string]interface{}
 }

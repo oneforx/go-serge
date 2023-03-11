@@ -2,10 +2,10 @@ package messages
 
 import (
 	"github.com/google/uuid"
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 )
 
 type UpdateMessageData struct {
-	Id         uuid.UUID        `json:"id"`
-	Components []*ecs.Component `json:"components"`
+	Id         uuid.UUID          `json:"id"`
+	Components []*goecs.Component `json:"components"`
 }

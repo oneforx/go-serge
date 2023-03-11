@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 )
 
 type WorldServer struct {
@@ -23,9 +23,9 @@ type WorldServer struct {
 
 	ServerMutex sync.RWMutex
 
-	World          *ecs.IWorld
+	World          *goecs.IWorld
 	Clients        []*Client
-	LibraryManager *ecs.LibraryManager
+	LibraryManager *LibraryManager
 
 	States map[string]interface{}
 }
@@ -170,10 +170,10 @@ func (se *WorldServer) ListenUDP(connexionHandler func(*net.UDPConn, *net.UDPAdd
 	}
 }
 
-func (se *WorldServer) USendToAll(message Message) *ecs.FeedBack {
+func (se *WorldServer) USendToAll(message Message) *goecs.FeedBack {
 	bytes, err := MessageToBytes(message)
 	if err != nil {
-		return &ecs.FeedBack{
+		return &goecs.FeedBack{
 			Host:  "USendToAll",
 			Job:   "MessageToBytes",
 			Label: "COULD_NOT_CONVERT_MESSAGE",
@@ -181,13 +181,13 @@ func (se *WorldServer) USendToAll(message Message) *ecs.FeedBack {
 		}
 	}
 
-	var writeToFeedback *ecs.FeedBack
+	var writeToFeedback *goecs.FeedBack
 
 	for _, addr := range se.UdpConnexions {
 		_, err := se.UdpListener.WriteTo(bytes, addr)
 		if err != nil {
 			if writeToFeedback == nil {
-				writeToFeedback = &ecs.FeedBack{
+				writeToFeedback = &goecs.FeedBack{
 					Host:  "USendToAll",
 					Job:   "WriteTo",
 					Label: "COULD_NOT_WRITE_TO",
@@ -207,17 +207,17 @@ func (se *WorldServer) USendToAll(message Message) *ecs.FeedBack {
 		return writeToFeedback
 	}
 
-	return &ecs.FeedBack{
+	return &goecs.FeedBack{
 		Host:  "USendToAll",
 		Job:   "return",
 		Label: "SUCCESS",
 	}
 }
 
-func (se *WorldServer) USendToAddr(address string, message Message) *ecs.FeedBack {
+func (se *WorldServer) USendToAddr(address string, message Message) *goecs.FeedBack {
 	bytes, err := MessageToBytes(message)
 	if err != nil {
-		return &ecs.FeedBack{
+		return &goecs.FeedBack{
 			Host:  "USendToAddr",
 			Job:   "MessageToBytes",
 			Label: "COULD_NOT_CONVERT_MESSAGE",
@@ -225,14 +225,14 @@ func (se *WorldServer) USendToAddr(address string, message Message) *ecs.FeedBac
 		}
 	}
 
-	var writeToFeedback *ecs.FeedBack
+	var writeToFeedback *goecs.FeedBack
 
 	for addrString, addr := range se.UdpConnexions {
 		if addrString == address {
 			_, err := se.UdpListener.WriteToUDP(bytes, addr)
 			if err != nil {
 				if writeToFeedback == nil {
-					writeToFeedback = &ecs.FeedBack{
+					writeToFeedback = &goecs.FeedBack{
 						Host:  "USendToAddr",
 						Job:   "WriteToUDP",
 						Label: "COULD_NOT_WRITE_TO",
@@ -250,17 +250,17 @@ func (se *WorldServer) USendToAddr(address string, message Message) *ecs.FeedBac
 		return writeToFeedback
 	}
 
-	return &ecs.FeedBack{
+	return &goecs.FeedBack{
 		Host:  "USendToAddr",
 		Job:   "return",
 		Label: "SUCCESS",
 	}
 }
 
-func (se *WorldServer) TSendToAll(message Message) *ecs.FeedBack {
+func (se *WorldServer) TSendToAll(message Message) *goecs.FeedBack {
 	bytes, err := MessageToBytes(message)
 	if err != nil {
-		return &ecs.FeedBack{
+		return &goecs.FeedBack{
 			Host:  "TSendToAll",
 			Job:   "MessageToBytes",
 			Label: "COULD_NOT_CONVERT_MESSAGE",
@@ -268,13 +268,13 @@ func (se *WorldServer) TSendToAll(message Message) *ecs.FeedBack {
 		}
 	}
 
-	var writeToFeedback *ecs.FeedBack
+	var writeToFeedback *goecs.FeedBack
 
 	for _, connexion := range se.TcpConnexions {
 		_, err := connexion.Write(bytes)
 		if err != nil {
 			if writeToFeedback == nil {
-				writeToFeedback = &ecs.FeedBack{
+				writeToFeedback = &goecs.FeedBack{
 					Host:  "TSendToAll",
 					Job:   "MessageToBytes",
 					Label: "COULD_NOT_WRITE_TO",
@@ -293,17 +293,17 @@ func (se *WorldServer) TSendToAll(message Message) *ecs.FeedBack {
 		return writeToFeedback
 	}
 
-	return &ecs.FeedBack{
+	return &goecs.FeedBack{
 		Host:  "TsendToAll",
 		Job:   "return",
 		Label: "SUCCESS",
 	}
 }
 
-func (se *WorldServer) TSendToAddr(address string, message Message) *ecs.FeedBack {
+func (se *WorldServer) TSendToAddr(address string, message Message) *goecs.FeedBack {
 	bytes, err := MessageToBytes(message)
 	if err != nil {
-		return &ecs.FeedBack{
+		return &goecs.FeedBack{
 			Host:  "TSendToAddr",
 			Job:   "MessageToBytes",
 			Label: "COULD_NOT_CONVERT_MESSAGE",
@@ -311,14 +311,14 @@ func (se *WorldServer) TSendToAddr(address string, message Message) *ecs.FeedBac
 		}
 	}
 
-	var writeToFeedback *ecs.FeedBack
+	var writeToFeedback *goecs.FeedBack
 
 	for addr, connexion := range se.TcpConnexions {
 		if addr == address {
 			_, err := connexion.Write(bytes)
 			if err != nil {
 				if writeToFeedback == nil {
-					writeToFeedback = &ecs.FeedBack{
+					writeToFeedback = &goecs.FeedBack{
 						Host:  "TSendToAddr",
 						Job:   "connexion.Write()",
 						Label: "COULD_NOT_WRITE_TO",
@@ -336,7 +336,7 @@ func (se *WorldServer) TSendToAddr(address string, message Message) *ecs.FeedBac
 		return writeToFeedback
 	}
 
-	return &ecs.FeedBack{
+	return &goecs.FeedBack{
 		Host:  "TSendToAddr",
 		Job:   "return",
 		Label: "SUCCESS",
@@ -370,7 +370,7 @@ func BytesToMessage(bytes []byte) (Message, error) {
 	return message, nil
 }
 
-func LogFeedBack(fb ecs.FeedBack) {
+func LogFeedBack(fb goecs.FeedBack) {
 	type FeedbackData struct {
 		Data interface{} `json:"data"`
 	}

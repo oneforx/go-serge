@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/google/uuid"
-	"github.com/oneforx/go-ecs"
+	goecs "github.com/oneforx/go-ecs"
 )
 
 type TargetType string
@@ -38,5 +38,5 @@ type Client struct {
 	ID         uuid.UUID
 	Email      string
 	Password   string
-	Characters []ecs.Entity
+	Characters []goecs.Entity
 }

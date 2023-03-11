@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hajimehoshi/ebiten v1.12.12
 	github.com/hajimehoshi/ebiten/v2 v2.4.16
-	github.com/oneforx/go-ecs v0.0.6
+	github.com/oneforx/go-ecs v0.0.8
 )
 
 require (
