@@ -13,4 +13,4 @@ La méthode USendToAll envoie un message à tous les clients connectés via UDP.
 
 La méthode USendToAddr envoie un message à un client connecté spécifique via UDP.
 
-Le package engine utilise également les packages standard encoding/json, fmt, log, net et sync, ainsi que le package github.com/google/uuid.
+Le package lib utilise également les packages standard encoding/json, fmt, log, net et sync, ainsi que le package github.com/google/uuid.

@@ -11,7 +11,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/oneforx/go-ecs"
-	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/lib"
 	"github.com/oneforx/go-serge/messages"
 )
 
@@ -79,7 +79,7 @@ func (g *SquirrelGame) Update() error {
 
 		mx, my := ebiten.CursorPosition()
 
-		bytes, err := engine.MessageToBytes(messages.CS_ORIENTATION(mx, my))
+		bytes, err := lib.MessageToBytes(messages.CS_ORIENTATION(mx, my))
 		if err != nil {
 			log.Println("COuld not parse ")
 		}
@@ -93,7 +93,7 @@ func (g *SquirrelGame) Update() error {
 			for _, k := range g.PressedKeys {
 				switch k.String() {
 				case "D":
-					move_right_message, err := engine.MessageToBytes(engine.Message{
+					move_right_message, err := lib.MessageToBytes(lib.Message{
 						MessageType: "MOVE",
 						Data:        "RIGHT",
 					})
@@ -105,7 +105,7 @@ func (g *SquirrelGame) Update() error {
 						g.ClientServer.UDP.Write(move_right_message)
 					}
 				case "S":
-					move_right_message, err := engine.MessageToBytes(engine.Message{
+					move_right_message, err := lib.MessageToBytes(lib.Message{
 						MessageType: "MOVE",
 						Data:        "DOWN",
 					})
@@ -117,7 +117,7 @@ func (g *SquirrelGame) Update() error {
 						g.ClientServer.UDP.Write(move_right_message)
 					}
 				case "W":
-					move_right_message, err := engine.MessageToBytes(engine.Message{
+					move_right_message, err := lib.MessageToBytes(lib.Message{
 						MessageType: "MOVE",
 						Data:        "UP",
 					})
@@ -129,7 +129,7 @@ func (g *SquirrelGame) Update() error {
 						g.ClientServer.UDP.Write(move_right_message)
 					}
 				case "A":
-					move_left_message, err := engine.MessageToBytes(engine.Message{
+					move_left_message, err := lib.MessageToBytes(lib.Message{
 						MessageType: "MOVE",
 						Data:        "LEFT",
 					})
@@ -148,7 +148,7 @@ func (g *SquirrelGame) Update() error {
 		if leftButtonPressed {
 			tcpConnexion := *g.ClientServer.TCP
 
-			bytes, err := engine.MessageToBytes(messages.CS_SHOOT())
+			bytes, err := lib.MessageToBytes(messages.CS_SHOOT())
 			if err != nil {
 				log.Println("Could not parse message CS_SHOOT to bytes")
 			}

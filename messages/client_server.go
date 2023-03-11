@@ -2,74 +2,74 @@ package messages
 
 import (
 	"github.com/google/uuid"
-	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/lib"
 )
 
 var (
-	CS_CONNECT_TOKEN = func(message string) engine.Message {
-		return engine.Message{
+	CS_CONNECT_TOKEN = func(message string) lib.Message {
+		return lib.Message{
 			MessageType: "CONNECT_TOKEN",
 			Data:        message,
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_HYB,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_HYB,
 		}
 	}
-	CS_PONG = func() engine.Message {
-		return engine.Message{
+	CS_PONG = func() lib.Message {
+		return lib.Message{
 			MessageType: "PONG",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_CREATE_CHARACTER = func() engine.Message {
-		return engine.Message{
+	CS_CREATE_CHARACTER = func() lib.Message {
+		return lib.Message{
 			MessageType: "CREATE_CHARACTER",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_PLAY_CHARACTER = func(worldId, characterId uuid.UUID) engine.Message {
-		return engine.Message{
+	CS_PLAY_CHARACTER = func(worldId, characterId uuid.UUID) lib.Message {
+		return lib.Message{
 			MessageType: "PLAY_CHARACTER",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_DELETE_CHARACTER = func(id string) engine.Message {
-		return engine.Message{
+	CS_DELETE_CHARACTER = func(id string) lib.Message {
+		return lib.Message{
 			MessageType: "DELETE_CHARACTER",
 			Data:        id,
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_CONNECT_WORLD = func() engine.Message {
-		return engine.Message{
+	CS_CONNECT_WORLD = func() lib.Message {
+		return lib.Message{
 			MessageType: "CONNECT_WORLD",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_DISCONNECT_WORLD = func() engine.Message {
-		return engine.Message{
+	CS_DISCONNECT_WORLD = func() lib.Message {
+		return lib.Message{
 			MessageType: "DISCONNECT_WORLD",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_SHOOT = func() engine.Message {
-		return engine.Message{
+	CS_SHOOT = func() lib.Message {
+		return lib.Message{
 			MessageType: "SHOOT",
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_TCP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_TCP,
 		}
 	}
-	CS_ORIENTATION = func(x int, y int) engine.Message {
-		return engine.Message{
+	CS_ORIENTATION = func(x int, y int) lib.Message {
+		return lib.Message{
 			MessageType: "ORIENTATION",
 			Data:        map[string]interface{}{"x": x, "y": y},
-			Target:      engine.SERVER_TARGET,
-			NetMode:     engine.NET_UDP,
+			Target:      lib.SERVER_TARGET,
+			NetMode:     lib.NET_UDP,
 		}
 	}
 )

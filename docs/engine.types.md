@@ -1,4 +1,4 @@
-Le fichier types.go du package engine contient les types et variables suivants :
+Le fichier types.go du package lib contient les types et variables suivants :
 
 Type TargetType : Cette variable de type chaine de caractères (string) est utilisée pour identifier le type de cible (CLIENT_TARGET ou SERVER_TARGET).
 

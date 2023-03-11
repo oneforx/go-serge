@@ -4,7 +4,7 @@ Le serveur a deux modes de connexion: TCP et UDP, et un mode de connexion est d�
 
 Le main fonction est la fonction principale qui démarre le serveur et initialise tous les paramètres nécessaires.
 
-La fonction commence par créer une instance du moteur de serveur engine.ServerEngine qui va être utilisé pour démarrer et gérer les connexions TCP et UDP.
+La fonction commence par créer une instance du moteur de serveur lib.ServerEngine qui va être utilisé pour démarrer et gérer les connexions TCP et UDP.
 
 Il crée également un map nommé clients pour stocker les informations de chaque client connecté.
 
@@ -16,7 +16,7 @@ Enfin, la méthode Start de l'instance serverEngine est appelée, en passant l'a
 
 Le gestionnaire pour les connexions TCP commence par envoyer un message de ping au client pour tester la connexion, puis attend de lire des données à partir de la connexion.
 
-Il essaie ensuite de désérialiser les données lues dans une structure de message engine.Message en utilisant la fonction json.Unmarshal.
+Il essaie ensuite de désérialiser les données lues dans une structure de message lib.Message en utilisant la fonction json.Unmarshal.
 
 Si le message est de type DISCONNECT, le serveur envoie un message DISCONNECT de retour pour déconnecter l'utilisateur.
 

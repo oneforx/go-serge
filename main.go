@@ -13,8 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/oneforx/go-ecs"
-	"github.com/oneforx/go-serge/engine"
-	"github.com/oneforx/go-serge/library"
+	"github.com/oneforx/go-serge/lib"
 	"github.com/oneforx/go-serge/messages"
 	"github.com/oneforx/go-serge/systems"
 )
@@ -39,8 +38,8 @@ var (
 )
 
 var (
-	LibraryManager = &library.LibraryManager{
-		Libraries: map[ecs.Identifier]ecs.Library{},
+	LibraryManager = &ecs.LibraryManager{
+		Libraries: map[ecs.Identifier]ecs.ILibrary{},
 	}
 )
 
@@ -68,7 +67,7 @@ func init() {
 
 			log.Println("LOADING " + newLibrary.GetId().String())
 			log.Println(newLibrary.GetSystems())
-			LibraryManager.AddLibrary(newLibrary.GetId(), newLibrary.GetStruct())
+			LibraryManager.AddLibrary(newLibrary.GetId(), newLibrary)
 		}
 
 		return nil
@@ -83,7 +82,7 @@ func init() {
 
 func main() {
 
-	serverEngine := engine.ServerEngine{}
+	serverEngine := lib.WorldServer{}
 
 	var sync_mutex sync.Mutex
 	var sync_group sync.WaitGroup
@@ -112,7 +111,7 @@ func main() {
 	}
 
 	var gameWorld ecs.IWorld = &ecs.World{
-		Id: "test",
+		Id: ecs.Identifier{"oneforx", "nexus"},
 	}
 
 	var gameEntities []*ecs.IEntity = []*ecs.IEntity{
@@ -132,9 +131,12 @@ func main() {
 			Namespace: "oneforx",
 			Path:      "update",
 		},
-		Name:         "net_update",
-		ServerEngine: &serverEngine,
-		World:        &gameWorld,
+		Name: "net_update",
+		System: ecs.System{
+			Type: ecs.SERVER,
+		},
+		WorldServer: &serverEngine,
+		World:       &gameWorld,
 	}
 
 	system, err := LibraryManager.InstantiateSystem(ecs.Identifier{Namespace: "oneforx", Path: "bullet"}, &gameWorld)
@@ -150,7 +152,7 @@ func main() {
 		defer ticker.Stop()                         // Arrête le ticker quand la fonction main se termine
 		for range ticker.C {
 			sync_mutex.Lock()
-			gameWorld.Update()
+			gameWorld.UpdateServer()
 			sync_mutex.Unlock()
 		}
 	}()
@@ -166,7 +168,7 @@ func main() {
 		defer sync_group.Done()
 		serverEngine.ListenTCP(func(tcpConnexion *net.TCPConn) {
 			startTime := time.Now()
-			// bytes, err := engine.MessageToBytes(messages.SC_PING(0))
+			// bytes, err := lib.MessageToBytes(messages.SC_PING(0))
 			// if err != nil {
 			// 	log.Println("Could not convert message to bytes")
 			// }
@@ -189,7 +191,7 @@ func main() {
 
 				log.Println("NEW_MESSAGE", string(buf[:n]))
 
-				var message engine.Message
+				var message lib.Message
 
 				if err := json.Unmarshal(buf[:n], &message); err != nil {
 					log.Println("Could not read message for client id")
@@ -212,7 +214,7 @@ func main() {
 				} else if message.MessageType == "CONNECT" {
 					messageData, ok := message.Data.(map[string]interface{})
 					if !ok {
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
 						if err != nil {
 							log.Println(err.Error())
 						} else {
@@ -222,7 +224,7 @@ func main() {
 					}
 					email, ok := messageData["email"].(string)
 					if !ok {
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
 						if err != nil {
 							log.Println(err.Error())
 						} else {
@@ -233,7 +235,7 @@ func main() {
 
 					password, ok := messageData["password"].(string)
 					if !ok {
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
 						if err != nil {
 							log.Println(err.Error())
 						} else {
@@ -254,14 +256,14 @@ func main() {
 						foundClient := clients[*foundId]
 						foundClient.TCP = tcpConnexion
 
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
 						if err != nil {
 							log.Println()
 						}
 
 						tcpConnexion.Write(bytes)
 					} else {
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
 						if err != nil {
 							log.Println()
 						}
@@ -293,13 +295,13 @@ func main() {
 						foundClient := clients[*foundId]
 						foundClient.TCP = tcpConnexion
 
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
 						if err != nil {
 							log.Println("Could not parse SC_CONNECT_SUCCESS to bytes")
 						}
 						tcpConnexion.Write(bytes)
 					} else {
-						bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("Le token que vous aviez était obsoléte"))
+						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("Le token que vous aviez était obsoléte"))
 						if err != nil {
 							log.Println("Could not parse SC_CONNECT_FAILED to bytes")
 						}
@@ -309,7 +311,7 @@ func main() {
 					endTime := time.Now()
 					latency := endTime.Sub(startTime)
 					startTime = time.Now()
-					bytes, err := engine.MessageToBytes(messages.SC_PING(int(latency.Milliseconds())))
+					bytes, err := lib.MessageToBytes(messages.SC_PING(int(latency.Milliseconds())))
 					if err != nil {
 						log.Println("Could not parse message to bytes")
 						// Evitons de lancer le message en passant au prochain message
@@ -346,7 +348,7 @@ func main() {
 
 						gameWorld.AddEntity(newBullet)
 
-						bytes, err := engine.MessageToBytes(messages.SC_CREATE_ENTITY(ecs.EntityToNoCycle(newBullet)))
+						bytes, err := lib.MessageToBytes(messages.SC_CREATE_ENTITY(ecs.EntityToNoCycle(newBullet)))
 						if err != nil {
 							log.Println("Could not parse SC_CREATE_ENTITY to bytes")
 							continue
@@ -382,7 +384,7 @@ func main() {
 							}))
 						}
 
-						bytes, err := engine.MessageToBytes(messages.SC_CREATE_WORLD(gameWorld.GetEntitiesNoCycle()))
+						bytes, err := lib.MessageToBytes(messages.SC_CREATE_WORLD(gameWorld.GetEntitiesNoCycle()))
 						if err != nil {
 							log.Println("Could not parse SC_CREATE_WORLD to bytes")
 							continue
@@ -403,12 +405,12 @@ func main() {
 	go func() {
 		defer sync_group.Done()
 
-		serverEngine.ListenMessages(func(message engine.Message, addr *net.UDPAddr) {
+		serverEngine.ListenMessages(func(message lib.Message, addr *net.UDPAddr) {
 			switch message.MessageType {
 			case "CONNECT":
 				messageData, ok := message.Data.(map[string]interface{})
 				if !ok {
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
 					if err != nil {
 						log.Println(err.Error())
 					} else {
@@ -418,7 +420,7 @@ func main() {
 				}
 				email, ok := messageData["email"].(string)
 				if !ok {
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
 					if err != nil {
 						log.Println(err.Error())
 					} else {
@@ -429,7 +431,7 @@ func main() {
 
 				password, ok := messageData["password"].(string)
 				if !ok {
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
 					if err != nil {
 						log.Println(err.Error())
 					} else {
@@ -449,14 +451,14 @@ func main() {
 				if foundId != nil {
 					foundClient := clients[*foundId]
 					foundClient.UDP = addr
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
 					if err != nil {
 						log.Println()
 					}
 
 					serverEngine.UdpListener.WriteToUDP(bytes, addr)
 				} else {
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
 					if err != nil {
 						log.Println()
 					}
@@ -487,7 +489,7 @@ func main() {
 				if foundClient != nil {
 					foundClient.UDP = addr
 
-					bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
+					bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
 					if err != nil {
 						log.Println("Could not send SC_CONNECT_SUCCESS")
 					}
@@ -559,175 +561,175 @@ func main() {
 
 	sync_group.Wait()
 
-	go func() {
-		defer sync_group.Done()
-		serverEngine.ListenUDP(func(masterConnexion *net.UDPConn, addr *net.UDPAddr, messagesChannel chan []byte) {
-			log.Println("UDP ADDRESS: ", addr.String())
+	// go func() {
+	// 	defer sync_group.Done()
+	// 	serverEngine.ListenUDP(func(masterConnexion *net.UDPConn, addr *net.UDPAddr, messagesChannel chan []byte) {
+	// 		log.Println("UDP ADDRESS: ", addr.String())
 
-			for {
-				msg := <-messagesChannel
-				message, err := engine.BytesToMessage(msg)
-				if err != nil {
-					log.Println(err.Error())
-				}
+	// 		for {
+	// 			msg := <-messagesChannel
+	// 			message, err := lib.BytesToMessage(msg)
+	// 			if err != nil {
+	// 				log.Println(err.Error())
+	// 			}
 
-				if err == nil {
-					switch message.MessageType {
-					case "CONNECT":
-						messageData, ok := message.Data.(map[string]interface{})
-						if !ok {
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
-							if err != nil {
-								log.Println(err.Error())
-							} else {
-								masterConnexion.WriteToUDP(bytes, addr)
-							}
-							continue
-						}
-						email, ok := messageData["email"].(string)
-						if !ok {
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
-							if err != nil {
-								log.Println(err.Error())
-							} else {
-								masterConnexion.WriteToUDP(bytes, addr)
-							}
-							continue
-						}
+	// 			if err == nil {
+	// 				switch message.MessageType {
+	// 				case "CONNECT":
+	// 					messageData, ok := message.Data.(map[string]interface{})
+	// 					if !ok {
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("data n'est pas un objet"))
+	// 						if err != nil {
+	// 							log.Println(err.Error())
+	// 						} else {
+	// 							masterConnexion.WriteToUDP(bytes, addr)
+	// 						}
+	// 						continue
+	// 					}
+	// 					email, ok := messageData["email"].(string)
+	// 					if !ok {
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+	// 						if err != nil {
+	// 							log.Println(err.Error())
+	// 						} else {
+	// 							masterConnexion.WriteToUDP(bytes, addr)
+	// 						}
+	// 						continue
+	// 					}
 
-						password, ok := messageData["password"].(string)
-						if !ok {
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
-							if err != nil {
-								log.Println(err.Error())
-							} else {
-								masterConnexion.WriteToUDP(bytes, addr)
-							}
-							continue
-						}
-						var foundId *string
+	// 					password, ok := messageData["password"].(string)
+	// 					if !ok {
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("l'objet manque l'email ou n'est pas une chaine de caractères"))
+	// 						if err != nil {
+	// 							log.Println(err.Error())
+	// 						} else {
+	// 							masterConnexion.WriteToUDP(bytes, addr)
+	// 						}
+	// 						continue
+	// 					}
+	// 					var foundId *string
 
-						for id, c := range clients {
-							if c.Email == email && c.Password == password {
-								foundId = &id
-								break
-							}
-						}
+	// 					for id, c := range clients {
+	// 						if c.Email == email && c.Password == password {
+	// 							foundId = &id
+	// 							break
+	// 						}
+	// 					}
 
-						if foundId != nil {
-							foundClient := clients[*foundId]
-							foundClient.UDP = addr
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
-							if err != nil {
-								log.Println()
-							}
+	// 					if foundId != nil {
+	// 						foundClient := clients[*foundId]
+	// 						foundClient.UDP = addr
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS(foundClient.Token.String()))
+	// 						if err != nil {
+	// 							log.Println()
+	// 						}
 
-							masterConnexion.WriteToUDP(bytes, addr)
-						} else {
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
-							if err != nil {
-								log.Println()
-							}
+	// 						masterConnexion.WriteToUDP(bytes, addr)
+	// 					} else {
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_FAILED("The compte " + email + " n'as pas été trouvé"))
+	// 						if err != nil {
+	// 							log.Println()
+	// 						}
 
-							masterConnexion.WriteToUDP(bytes, addr)
-						}
-					case "CONNECT_TOKEN":
-						// We bind the connexion to the Client
-						tokenString, ok := message.Data.(string)
-						if !ok {
-							log.Println("CONNECT_TOKEN Could not parse data to string")
-						}
+	// 						masterConnexion.WriteToUDP(bytes, addr)
+	// 					}
+	// 				case "CONNECT_TOKEN":
+	// 					// We bind the connexion to the Client
+	// 					tokenString, ok := message.Data.(string)
+	// 					if !ok {
+	// 						log.Println("CONNECT_TOKEN Could not parse data to string")
+	// 					}
 
-						token, err := uuid.Parse(tokenString)
-						if err != nil {
-							log.Println("CONNECT_TOKEN Could not parse tokenString to uuid")
-						}
+	// 					token, err := uuid.Parse(tokenString)
+	// 					if err != nil {
+	// 						log.Println("CONNECT_TOKEN Could not parse tokenString to uuid")
+	// 					}
 
-						var foundClient *Client
+	// 					var foundClient *Client
 
-						for _, client := range clients {
-							if client.Token == token {
-								foundClient = client
-								break
-							}
-						}
+	// 					for _, client := range clients {
+	// 						if client.Token == token {
+	// 							foundClient = client
+	// 							break
+	// 						}
+	// 					}
 
-						if foundClient != nil {
-							foundClient.UDP = addr
+	// 					if foundClient != nil {
+	// 						foundClient.UDP = addr
 
-							bytes, err := engine.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
-							if err != nil {
-								log.Println("Could not send SC_CONNECT_SUCCESS")
-							}
-							masterConnexion.WriteToUDP(bytes, addr)
-						}
-					case "MOVE":
-						go func() {
-							direction := message.Data.(string)
+	// 						bytes, err := lib.MessageToBytes(messages.SC_CONNECT_SUCCESS("Nous avons bien associé votre compte à votre connexion"))
+	// 						if err != nil {
+	// 							log.Println("Could not send SC_CONNECT_SUCCESS")
+	// 						}
+	// 						masterConnexion.WriteToUDP(bytes, addr)
+	// 					}
+	// 				case "MOVE":
+	// 					go func() {
+	// 						direction := message.Data.(string)
 
-							sync_mutex.Lock()
-							var foundId *uuid.UUID
-							for _, c := range clients {
-								if c.UDP != nil {
-									if c.UDP.String() == addr.String() {
-										foundId = &c.ID
-									}
-								}
-							}
-							sync_mutex.Unlock()
+	// 						sync_mutex.Lock()
+	// 						var foundId *uuid.UUID
+	// 						for _, c := range clients {
+	// 							if c.UDP != nil {
+	// 								if c.UDP.String() == addr.String() {
+	// 									foundId = &c.ID
+	// 								}
+	// 							}
+	// 						}
+	// 						sync_mutex.Unlock()
 
-							if foundId != nil {
-								if entities := gameWorld.GetEntitiesPossessedBy(*foundId); len(entities) != 0 {
-									for _, entity := range entities {
-										sync_mutex.Lock()
+	// 						if foundId != nil {
+	// 							if entities := gameWorld.GetEntitiesPossessedBy(*foundId); len(entities) != 0 {
+	// 								for _, entity := range entities {
+	// 									sync_mutex.Lock()
 
-										entityLocalised := *entity
-										positionComponent := entityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
-										if positionComponent == nil {
-											log.Println("Could not get component position")
-											continue
-										}
-										positionComponentLocalised := *positionComponent
+	// 									entityLocalised := *entity
+	// 									positionComponent := entityLocalised.GetComponent(ecs.Identifier{Namespace: "oneforx", Path: "position"})
+	// 									if positionComponent == nil {
+	// 										log.Println("Could not get component position")
+	// 										continue
+	// 									}
+	// 									positionComponentLocalised := *positionComponent
 
-										positionComponentDataParsed, ok := positionComponentLocalised.GetData().(map[string]interface{})
-										if !ok {
-											log.Println("Could not parse position component to map[string]float64")
-										}
+	// 									positionComponentDataParsed, ok := positionComponentLocalised.GetData().(map[string]interface{})
+	// 									if !ok {
+	// 										log.Println("Could not parse position component to map[string]float64")
+	// 									}
 
-										x := positionComponentDataParsed["x"].(float64)
-										y := positionComponentDataParsed["y"].(float64)
+	// 									x := positionComponentDataParsed["x"].(float64)
+	// 									y := positionComponentDataParsed["y"].(float64)
 
-										switch direction {
-										case "UP":
-											positionComponentDataParsed["y"] = y - 2
-										case "DOWN":
-											positionComponentDataParsed["y"] = y + 2
-										case "LEFT":
-											positionComponentDataParsed["x"] = x - 2
-										case "RIGHT":
-											positionComponentDataParsed["x"] = x + 2
-										}
+	// 									switch direction {
+	// 									case "UP":
+	// 										positionComponentDataParsed["y"] = y - 2
+	// 									case "DOWN":
+	// 										positionComponentDataParsed["y"] = y + 2
+	// 									case "LEFT":
+	// 										positionComponentDataParsed["x"] = x - 2
+	// 									case "RIGHT":
+	// 										positionComponentDataParsed["x"] = x + 2
+	// 									}
 
-										log.Println(positionComponentLocalised.GetData())
-										sync_mutex.Unlock()
-									}
-								}
-							}
-						}()
-					case "ORIENTATION":
-						// mousePosition, ok := handleMessage.Data.(map[string]int)
-						// if !ok {
-						// 	log.Println("Could not parse CS_ORIENTATION data to map[string]int")
-						// }
-					}
-				}
+	// 									log.Println(positionComponentLocalised.GetData())
+	// 									sync_mutex.Unlock()
+	// 								}
+	// 							}
+	// 						}
+	// 					}()
+	// 				case "ORIENTATION":
+	// 					// mousePosition, ok := handleMessage.Data.(map[string]int)
+	// 					// if !ok {
+	// 					// 	log.Println("Could not parse CS_ORIENTATION data to map[string]int")
+	// 					// }
+	// 				}
+	// 			}
 
-				<-messagesChannel
-			}
+	// 			<-messagesChannel
+	// 		}
 
-		})
+	// 	})
 
-	}()
+	// }()
 }
 
 // func Old() {
@@ -736,7 +738,7 @@ func main() {
 // 		message := <-serverEngine.UdpMessages[addr.String()]
 // 		sync_mutex.Unlock()
 
-// 		var handleMessage engine.Message
+// 		var handleMessage lib.Message
 // 		if err := json.Unmarshal(message, &handleMessage); err != nil {
 // 			log.Println("Failed to read message", message)
 // 		}

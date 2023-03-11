@@ -163,4 +163,37 @@ v0.0.4
     - Une commande peut avoir plusieurs argument
     
 - Gestion de multimonde
+
+Game
+    - LibraryManager
+    
+World.canDraw = false
+Game.draw() {
+    if !World.canDraw {
+
+    }
+}
+
+Client Receive Message
+    - var CurrentMessage
+    - LibraryManager.GetHandlers() []ClientMessageHandler
+    - for _, handler := range messageHandlers {
+        if CurrentMessage.ID == handler.ID {
+            handler.Execute(message, *world_client)
+        }
+    }
+
+Server Receive Message
+    - var CurrentMessage
+    - LibraryManager.GetHandlers() []ServerMessageHandler
+    - for _, handler := range messageHandlers {
+        if CurrentMessage.ID == handler.ID {
+            handler.Execute(message, *world_server)
+        }
+    }
+
+go-serge-game
+- See all games
+- Launch a game server, select mods
 - 
+

@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/oneforx/go-ecs"
 	"github.com/oneforx/go-serge/cmd/client/game"
-	"github.com/oneforx/go-serge/engine"
+	"github.com/oneforx/go-serge/lib"
 	"github.com/oneforx/go-serge/messages"
 
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -26,7 +26,10 @@ var squirrelGame *game.SquirrelGame = &game.SquirrelGame{
 	Token:        nil,
 	TcpConnected: false,
 	World: &ecs.World{
-		Id: string(uuid.New().String()),
+		Id: ecs.Identifier{
+			Namespace: "oneforx",
+			Path:      "nexus",
+		},
 	},
 	Resources: map[string]*ebiten.Image{},
 	Entities:  []ecs.Entity{},
@@ -110,7 +113,7 @@ func main() {
 		// Après que nous écoutons les messages, nous pouvons envoyer un message
 
 		if squirrelGame.Token != nil {
-			bytes, err := engine.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
+			bytes, err := lib.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
 			if err != nil {
 				log.Println("Could not parse message to bytes")
 			}
@@ -123,7 +126,7 @@ func main() {
 			if err != nil {
 				continue
 			}
-			var message engine.Message
+			var message lib.Message
 
 			if err := json.Unmarshal(buf[:n], &message); err != nil {
 				log.Println("Could not read message", err.Error())
@@ -160,7 +163,7 @@ func main() {
 				if err == nil {
 					squirrelGame.Token = &tokenId
 
-					bytesForUdp, err := engine.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
+					bytesForUdp, err := lib.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
 					if err != nil {
 						log.Println("Could not parse message to bytes")
 					}
@@ -172,8 +175,8 @@ func main() {
 				type CustomMessage struct {
 					MessageType string            `json:"message"`
 					Data        ecs.EntityNoCycle `json:"data"`
-					Target      engine.TargetType
-					NetMode     engine.NET_MODE
+					Target      lib.TargetType
+					NetMode     lib.NET_MODE
 				}
 
 				var customMessage CustomMessage
@@ -201,7 +204,7 @@ func main() {
 				squirrelGame.Latence = latence
 				sync_mutex.Unlock()
 
-				bytes, err := engine.MessageToBytes(messages.CS_PONG())
+				bytes, err := lib.MessageToBytes(messages.CS_PONG())
 				if err != nil {
 					continue
 				}
@@ -218,7 +221,7 @@ func main() {
 		defer wait_group.Done()
 
 		if squirrelGame.Token != nil {
-			bytes, err := engine.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
+			bytes, err := lib.MessageToBytes(messages.CS_CONNECT_TOKEN(squirrelGame.Token.String()))
 			if err != nil {
 				log.Println("Could not parse message to bytes")
 			}
@@ -237,7 +240,7 @@ func main() {
 						continue
 					}
 
-					message, err := engine.BytesToMessage(buf[:n])
+					message, err := lib.BytesToMessage(buf[:n])
 					if err != nil {
 						continue
 					}
@@ -296,7 +299,7 @@ func main() {
 
 			scannerText := strings.Split(scanner.Text(), " ")
 			if scannerText[0] == "DISCONNECT" {
-				var message engine.Message = engine.Message{
+				var message lib.Message = lib.Message{
 					MessageType: "DISCONNECT",
 				}
 
@@ -305,7 +308,7 @@ func main() {
 					break
 				}
 			} else if scannerText[0] == "UDP" {
-				var message engine.Message = engine.Message{
+				var message lib.Message = lib.Message{
 					MessageType: "UDP",
 				}
 
@@ -316,7 +319,7 @@ func main() {
 			} else if scannerText[0] == "CONNECT" {
 				email := scannerText[1]
 				password := scannerText[2]
-				var message engine.Message = engine.Message{
+				var message lib.Message = lib.Message{
 					MessageType: "CONNECT",
 					Data:        map[string]interface{}{"email": email, "password": password},
 				}
@@ -330,7 +333,7 @@ func main() {
 				}
 			} else if scannerText[0] == "CREATE" {
 			} else if scannerText[0] == "CONNECT_WORLD" {
-				bytes, err := engine.MessageToBytes(messages.CS_CONNECT_WORLD())
+				bytes, err := lib.MessageToBytes(messages.CS_CONNECT_WORLD())
 				if err != nil {
 					log.Println("Could parse message CS_CONNECT_WORLD")
 				}
@@ -339,7 +342,7 @@ func main() {
 					log.Println("Could not send message CS_CONNECT_WORLD")
 				}
 			} else if scannerText[0] == "DISCONNECT_WORLD" {
-				bytes, err := engine.MessageToBytes(messages.CS_DISCONNECT_WORLD())
+				bytes, err := lib.MessageToBytes(messages.CS_DISCONNECT_WORLD())
 				if err != nil {
 					log.Println("Could parse message CS_DISCONNECT_WORLD")
 				}
@@ -348,7 +351,7 @@ func main() {
 					log.Println("Could not send message CS_DISCONNECT_WORLD")
 				}
 			} else {
-				var message engine.Message = engine.Message{
+				var message lib.Message = lib.Message{
 					MessageType: "MESSAGE",
 					Data:        scannerText,
 				}
@@ -380,7 +383,7 @@ func main() {
 	wait_group.Wait()
 }
 
-func SendTCPMessage(tcpConnexionPointer *net.Conn, message engine.Message) error {
+func SendTCPMessage(tcpConnexionPointer *net.Conn, message lib.Message) error {
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("could not marshal message from user keyboard entry")
@@ -396,7 +399,7 @@ func SendTCPMessage(tcpConnexionPointer *net.Conn, message engine.Message) error
 	return nil
 }
 
-func SendUDPMessage(udpConnexionPointer *net.UDPConn, message engine.Message) error {
+func SendUDPMessage(udpConnexionPointer *net.UDPConn, message lib.Message) error {
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("could not marshal message from user keyboard entry")
