@@ -26,6 +26,8 @@ type WorldServer struct {
 	World          *ecs.IWorld
 	Clients        []*Client
 	LibraryManager *ecs.LibraryManager
+
+	States map[string]interface{}
 }
 
 func (se *WorldServer) Start(address string) {
